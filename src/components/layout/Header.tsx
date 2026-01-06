@@ -1,11 +1,20 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
-import { Menu, X, Search, MapPin, User, Store } from "lucide-react";
+import { Link, useNavigate } from "react-router-dom";
+import { Menu, X, Search, MapPin, User, Store, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useAuth } from "@/contexts/AuthContext";
 import logo from "@/assets/logo.jpg";
 
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const { user, profile, signOut } = useAuth();
+  const navigate = useNavigate();
+
+  const handleSignOut = async () => {
+    await signOut();
+    navigate("/");
+    setIsMenuOpen(false);
+  };
 
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80">
@@ -37,14 +46,45 @@ const Header = () => {
             <MapPin className="h-4 w-4" />
             <span>Maputo</span>
           </Button>
-          <Button variant="outline" size="sm" className="gap-2">
-            <User className="h-4 w-4" />
-            <span>Entrar</span>
-          </Button>
-          <Button size="sm" className="gap-2 bg-primary hover:bg-primary/90">
-            <Store className="h-4 w-4" />
-            <span>Vender</span>
-          </Button>
+          
+          {user ? (
+            <>
+              {profile?.user_type === "vendedor" ? (
+                <Button variant="outline" size="sm" asChild className="gap-2">
+                  <Link to="/painel">
+                    <Store className="h-4 w-4" />
+                    <span>Minha Loja</span>
+                  </Link>
+                </Button>
+              ) : (
+                <Button variant="outline" size="sm" asChild className="gap-2">
+                  <Link to="/perfil">
+                    <User className="h-4 w-4" />
+                    <span>{profile?.full_name?.split(" ")[0] || "Perfil"}</span>
+                  </Link>
+                </Button>
+              )}
+              <Button variant="ghost" size="sm" onClick={handleSignOut} className="gap-2 text-muted-foreground">
+                <LogOut className="h-4 w-4" />
+                <span>Sair</span>
+              </Button>
+            </>
+          ) : (
+            <>
+              <Button variant="outline" size="sm" asChild className="gap-2">
+                <Link to="/auth">
+                  <User className="h-4 w-4" />
+                  <span>Entrar</span>
+                </Link>
+              </Button>
+              <Button size="sm" asChild className="gap-2 bg-primary hover:bg-primary/90">
+                <Link to="/auth">
+                  <Store className="h-4 w-4" />
+                  <span>Vender</span>
+                </Link>
+              </Button>
+            </>
+          )}
         </div>
 
         {/* Mobile Menu Button */}
@@ -91,15 +131,50 @@ const Header = () => {
             >
               <span>Como Funciona</span>
             </Link>
+            
             <div className="border-t border-border pt-3 mt-2 flex flex-col gap-2">
-              <Button variant="outline" className="w-full justify-start gap-2">
-                <User className="h-4 w-4" />
-                <span>Entrar</span>
-              </Button>
-              <Button className="w-full justify-start gap-2 bg-primary hover:bg-primary/90">
-                <Store className="h-4 w-4" />
-                <span>Criar Minha Loja</span>
-              </Button>
+              {user ? (
+                <>
+                  {profile?.user_type === "vendedor" ? (
+                    <Button variant="outline" asChild className="w-full justify-start gap-2" onClick={() => setIsMenuOpen(false)}>
+                      <Link to="/painel">
+                        <Store className="h-4 w-4" />
+                        <span>Minha Loja</span>
+                      </Link>
+                    </Button>
+                  ) : (
+                    <Button variant="outline" asChild className="w-full justify-start gap-2" onClick={() => setIsMenuOpen(false)}>
+                      <Link to="/perfil">
+                        <User className="h-4 w-4" />
+                        <span>Meu Perfil</span>
+                      </Link>
+                    </Button>
+                  )}
+                  <Button 
+                    variant="ghost" 
+                    onClick={handleSignOut}
+                    className="w-full justify-start gap-2 text-muted-foreground"
+                  >
+                    <LogOut className="h-4 w-4" />
+                    <span>Sair</span>
+                  </Button>
+                </>
+              ) : (
+                <>
+                  <Button variant="outline" asChild className="w-full justify-start gap-2" onClick={() => setIsMenuOpen(false)}>
+                    <Link to="/auth">
+                      <User className="h-4 w-4" />
+                      <span>Entrar</span>
+                    </Link>
+                  </Button>
+                  <Button asChild className="w-full justify-start gap-2 bg-primary hover:bg-primary/90" onClick={() => setIsMenuOpen(false)}>
+                    <Link to="/auth">
+                      <Store className="h-4 w-4" />
+                      <span>Criar Minha Loja</span>
+                    </Link>
+                  </Button>
+                </>
+              )}
             </div>
           </nav>
         </div>

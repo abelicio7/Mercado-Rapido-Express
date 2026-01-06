@@ -14,7 +14,72 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      profiles: {
+        Row: {
+          address_confirmed: boolean | null
+          avatar_url: string | null
+          city: string | null
+          created_at: string
+          full_name: string
+          id: string
+          is_verified: boolean | null
+          phone: string | null
+          plan_expires_at: string | null
+          plan_type: string | null
+          province: string | null
+          store_address: string | null
+          store_description: string | null
+          store_name: string | null
+          trial_ends_at: string | null
+          updated_at: string
+          user_id: string
+          user_type: Database["public"]["Enums"]["user_type"]
+          whatsapp: string | null
+        }
+        Insert: {
+          address_confirmed?: boolean | null
+          avatar_url?: string | null
+          city?: string | null
+          created_at?: string
+          full_name: string
+          id?: string
+          is_verified?: boolean | null
+          phone?: string | null
+          plan_expires_at?: string | null
+          plan_type?: string | null
+          province?: string | null
+          store_address?: string | null
+          store_description?: string | null
+          store_name?: string | null
+          trial_ends_at?: string | null
+          updated_at?: string
+          user_id: string
+          user_type?: Database["public"]["Enums"]["user_type"]
+          whatsapp?: string | null
+        }
+        Update: {
+          address_confirmed?: boolean | null
+          avatar_url?: string | null
+          city?: string | null
+          created_at?: string
+          full_name?: string
+          id?: string
+          is_verified?: boolean | null
+          phone?: string | null
+          plan_expires_at?: string | null
+          plan_type?: string | null
+          province?: string | null
+          store_address?: string | null
+          store_description?: string | null
+          store_name?: string | null
+          trial_ends_at?: string | null
+          updated_at?: string
+          user_id?: string
+          user_type?: Database["public"]["Enums"]["user_type"]
+          whatsapp?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -23,7 +88,7 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      [_ in never]: never
+      user_type: "cliente" | "vendedor"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +215,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      user_type: ["cliente", "vendedor"],
+    },
   },
 } as const
