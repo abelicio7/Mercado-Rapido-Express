@@ -14,6 +14,122 @@ export type Database = {
   }
   public: {
     Tables: {
+      categories: {
+        Row: {
+          created_at: string
+          icon: string | null
+          id: string
+          name: string
+          slug: string
+        }
+        Insert: {
+          created_at?: string
+          icon?: string | null
+          id?: string
+          name: string
+          slug: string
+        }
+        Update: {
+          created_at?: string
+          icon?: string | null
+          id?: string
+          name?: string
+          slug?: string
+        }
+        Relationships: []
+      }
+      interest_clicks: {
+        Row: {
+          clicked_at: string
+          id: string
+          product_id: string
+          user_id: string | null
+        }
+        Insert: {
+          clicked_at?: string
+          id?: string
+          product_id: string
+          user_id?: string | null
+        }
+        Update: {
+          clicked_at?: string
+          id?: string
+          product_id?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "interest_clicks_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      products: {
+        Row: {
+          category_id: string | null
+          created_at: string
+          description: string | null
+          highlight_expires_at: string | null
+          id: string
+          images: string[] | null
+          is_active: boolean | null
+          is_highlighted: boolean | null
+          name: string
+          price: number
+          seller_id: string
+          stock: number
+          updated_at: string
+        }
+        Insert: {
+          category_id?: string | null
+          created_at?: string
+          description?: string | null
+          highlight_expires_at?: string | null
+          id?: string
+          images?: string[] | null
+          is_active?: boolean | null
+          is_highlighted?: boolean | null
+          name: string
+          price: number
+          seller_id: string
+          stock?: number
+          updated_at?: string
+        }
+        Update: {
+          category_id?: string | null
+          created_at?: string
+          description?: string | null
+          highlight_expires_at?: string | null
+          id?: string
+          images?: string[] | null
+          is_active?: boolean | null
+          is_highlighted?: boolean | null
+          name?: string
+          price?: number
+          seller_id?: string
+          stock?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "products_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "products_seller_id_fkey"
+            columns: ["seller_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["user_id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           address_confirmed: boolean | null
