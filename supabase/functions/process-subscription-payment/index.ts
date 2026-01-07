@@ -109,12 +109,14 @@ serve(async (req: Request) => {
         ? "https://e2payments.explicador.co.mz/v1/c2b/mpesa-payment/999813"
         : "https://e2payments.explicador.co.mz/v1/c2b/emola-payment/999814";
 
-    // Reference: only alphanumeric, max 20 chars for M-Pesa compatibility
-    // Format: MRBSCM12345678 (14 chars) - no hyphens
-    const planCode = planType === "basico" ? "BSC" : "PRO";
+    // Reference: e2Payments adds "e2P" prefix + 4 char suffix
+    // So our part must be max 8 chars to stay under M-Pesa limit (~20 chars total)
+    // Format: BSC1M926 (8 chars) - plan + random digit + period + short id
+    const planCode = planType === "basico" ? "B" : "P";
     const periodCode = billingPeriod === "mensal" ? "M" : "A";
-    const shortId = userId.slice(0, 6).replace(/-/g, "");
-    const reference = `MR${planCode}${periodCode}${shortId}`;
+    const randomDigit = Math.floor(Math.random() * 10);
+    const shortId = userId.slice(0, 4).replace(/-/g, "");
+    const reference = `${planCode}${randomDigit}${periodCode}${shortId}`;
 
     console.log("Payment reference:", reference, "Length:", reference.length);
 

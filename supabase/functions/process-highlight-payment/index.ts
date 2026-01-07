@@ -78,9 +78,10 @@ serve(async (req: Request) => {
         ? "https://e2payments.explicador.co.mz/v1/c2b/mpesa-payment/999813"
         : "https://e2payments.explicador.co.mz/v1/c2b/emola-payment/999814";
 
-    // Reference: only alphanumeric, max 20 chars for M-Pesa compatibility
-    const shortProductId = productId.slice(0, 6).replace(/-/g, "");
-    const reference = `MRHL${days}D${shortProductId}`;
+    // Reference: e2Payments adds "e2P" prefix + 4 char suffix
+    // So our part must be max 8 chars to stay under M-Pesa limit
+    const shortProductId = productId.slice(0, 4).replace(/-/g, "");
+    const reference = `HL${days}${shortProductId}`;
 
     console.log("Highlight reference:", reference, "Length:", reference.length);
 
