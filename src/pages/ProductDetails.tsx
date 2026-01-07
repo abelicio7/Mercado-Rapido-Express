@@ -29,6 +29,8 @@ interface Product {
   images: string[];
   is_highlighted: boolean;
   created_at: string;
+  category_id: string | null;
+  seller_id: string;
   categories: { name: string; slug: string } | null;
   profiles: {
     user_id: string;
@@ -43,18 +45,33 @@ interface Product {
   } | null;
 }
 
+interface RelatedProduct {
+  id: string;
+  name: string;
+  price: number;
+  stock: number;
+  images: string[];
+  is_highlighted: boolean;
+  profiles: {
+    store_name: string;
+    is_verified: boolean;
+  } | null;
+}
+
 const ProductDetails = () => {
   const { id } = useParams<{ id: string }>();
   const { user } = useAuth();
   const { toast } = useToast();
 
   const [product, setProduct] = useState<Product | null>(null);
+  const [relatedProducts, setRelatedProducts] = useState<RelatedProduct[]>([]);
   const [loading, setLoading] = useState(true);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
   useEffect(() => {
     if (id) {
       fetchProduct();
+      setCurrentImageIndex(0);
     }
   }, [id]);
 
@@ -83,6 +100,11 @@ const ProductDetails = () => {
 
       if (error) throw error;
       setProduct(data);
+
+      // Fetch related products after main product loads
+      if (data) {
+        fetchRelatedProducts(data.id, data.category_id, data.seller_id);
+      }
     } catch (error) {
       console.error("Error fetching product:", error);
       toast({
@@ -92,6 +114,84 @@ const ProductDetails = () => {
       });
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchRelatedProducts = async (
+    currentProductId: string,
+    categoryId: string | null,
+    sellerId: string
+  ) => {
+    try {
+      // First try to get products from same category
+      let query = supabase
+        .from("products")
+        .select(`
+          id,
+          name,
+          price,
+          stock,
+          images,
+          is_highlighted,
+          profiles!products_seller_id_fkey (
+            store_name,
+            is_verified
+          )
+        `)
+        .eq("is_active", true)
+        .neq("id", currentProductId)
+        .limit(4);
+
+      if (categoryId) {
+        query = query.eq("category_id", categoryId);
+      }
+
+      const { data: categoryProducts, error: categoryError } = await query;
+
+      if (categoryError) throw categoryError;
+
+      // If we have enough from category, use those
+      if (categoryProducts && categoryProducts.length >= 4) {
+        setRelatedProducts(categoryProducts);
+        return;
+      }
+
+      // Otherwise, also get products from the same store
+      const { data: storeProducts, error: storeError } = await supabase
+        .from("products")
+        .select(`
+          id,
+          name,
+          price,
+          stock,
+          images,
+          is_highlighted,
+          profiles!products_seller_id_fkey (
+            store_name,
+            is_verified
+          )
+        `)
+        .eq("is_active", true)
+        .eq("seller_id", sellerId)
+        .neq("id", currentProductId)
+        .limit(4);
+
+      if (storeError) throw storeError;
+
+      // Combine and deduplicate
+      const combined = [...(categoryProducts || [])];
+      const existingIds = new Set(combined.map((p) => p.id));
+
+      for (const product of storeProducts || []) {
+        if (!existingIds.has(product.id) && combined.length < 4) {
+          combined.push(product);
+          existingIds.add(product.id);
+        }
+      }
+
+      setRelatedProducts(combined);
+    } catch (error) {
+      console.error("Error fetching related products:", error);
     }
   };
 
@@ -360,6 +460,75 @@ const ProductDetails = () => {
             </div>
           </div>
         </div>
+
+        {/* Related Products Section */}
+        {relatedProducts.length > 0 && (
+          <section className="py-12 border-t border-border">
+            <div className="container">
+              <h2 className="font-display text-2xl font-bold mb-6">
+                Produtos Relacionados
+              </h2>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
+                {relatedProducts.map((relatedProduct) => {
+                  const stockStatus = getStockStatus(relatedProduct.stock);
+                  return (
+                    <Link
+                      key={relatedProduct.id}
+                      to={`/produtos/${relatedProduct.id}`}
+                      className="group bg-card rounded-xl overflow-hidden shadow-card hover:shadow-soft transition-all duration-300"
+                    >
+                      {/* Image */}
+                      <div className="aspect-square overflow-hidden bg-muted relative">
+                        {relatedProduct.is_highlighted && (
+                          <div className="absolute top-2 left-2 z-10">
+                            <Badge className="bg-highlight text-highlight-foreground gap-1 text-xs">
+                              <Sparkles className="h-3 w-3" />
+                              Destaque
+                            </Badge>
+                          </div>
+                        )}
+                        <div className="absolute top-2 right-2 z-10">
+                          <Badge variant={stockStatus.variant} className="text-xs">
+                            {stockStatus.label}
+                          </Badge>
+                        </div>
+                        {relatedProduct.images && relatedProduct.images.length > 0 ? (
+                          <img
+                            src={relatedProduct.images[0]}
+                            alt={relatedProduct.name}
+                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                          />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center">
+                            <Package className="h-8 w-8 text-muted-foreground" />
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Content */}
+                      <div className="p-3 space-y-1">
+                        <h3 className="font-medium text-sm line-clamp-2 group-hover:text-primary transition-colors">
+                          {relatedProduct.name}
+                        </h3>
+                        <p className="text-lg font-bold text-primary">
+                          {formatPrice(relatedProduct.price)}
+                        </p>
+                        {relatedProduct.profiles && (
+                          <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                            <span className="truncate">{relatedProduct.profiles.store_name}</span>
+                            {relatedProduct.profiles.is_verified && (
+                              <ShieldCheck className="h-3 w-3 text-success flex-shrink-0" />
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    </Link>
+                  );
+                })}
+              </div>
+            </div>
+          </section>
+        )}
       </main>
 
       <Footer />
