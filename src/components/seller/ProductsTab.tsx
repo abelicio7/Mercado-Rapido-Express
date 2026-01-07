@@ -3,7 +3,9 @@ import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Progress } from "@/components/ui/progress";
 import { useToast } from "@/hooks/use-toast";
+import { Link } from "react-router-dom";
 import {
   Plus,
   Edit,
@@ -15,9 +17,12 @@ import {
   Loader2,
   Package,
   ImageIcon,
+  AlertTriangle,
+  Crown,
 } from "lucide-react";
 import ProductFormDialog from "./ProductFormDialog";
 import HighlightDialog from "./HighlightDialog";
+import { getProductLimit, getPlanDisplayName } from "@/lib/planLimits";
 
 interface Product {
   id: string;
@@ -37,9 +42,11 @@ interface Product {
 
 interface ProductsTabProps {
   onMetricsChange: () => void;
+  planType: string | null;
+  isInTrial: boolean;
 }
 
-const ProductsTab = ({ onMetricsChange }: ProductsTabProps) => {
+const ProductsTab = ({ onMetricsChange, planType, isInTrial }: ProductsTabProps) => {
   const { user } = useAuth();
   const { toast } = useToast();
   
@@ -219,20 +226,46 @@ const ProductsTab = ({ onMetricsChange }: ProductsTabProps) => {
     );
   }
 
+  const productLimit = getProductLimit(planType, isInTrial);
+  const planName = getPlanDisplayName(planType, isInTrial);
+  const usagePercent = Math.min((products.length / productLimit) * 100, 100);
+  const isLimitReached = products.length >= productLimit;
+  const canUpgrade = isInTrial || planType?.toLowerCase() === 'basico';
+
   return (
     <div className="space-y-6">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
+        <div className="flex-1">
           <h3 className="font-display text-lg font-semibold">Meus Produtos</h3>
-          <p className="text-sm text-muted-foreground">
-            {products.length} produto{products.length !== 1 ? "s" : ""} cadastrado{products.length !== 1 ? "s" : ""}
-          </p>
+          <div className="flex items-center gap-2 mt-2">
+            <span className="text-sm text-muted-foreground">
+              {products.length}/{productLimit} produtos ({planName})
+            </span>
+          </div>
+          <Progress value={usagePercent} className="h-2 mt-2 max-w-xs" />
         </div>
-        <Button onClick={() => setIsDialogOpen(true)} className="gap-2">
-          <Plus className="h-4 w-4" />
-          Adicionar Produto
-        </Button>
+        {isLimitReached ? (
+          <div className="flex flex-col sm:flex-row gap-2 items-start sm:items-center">
+            <div className="flex items-center gap-2 text-amber-600 text-sm">
+              <AlertTriangle className="h-4 w-4" />
+              <span>Limite atingido</span>
+            </div>
+            {canUpgrade && (
+              <Button asChild className="gap-2">
+                <Link to="/planos">
+                  <Crown className="h-4 w-4" />
+                  Fazer Upgrade
+                </Link>
+              </Button>
+            )}
+          </div>
+        ) : (
+          <Button onClick={() => setIsDialogOpen(true)} className="gap-2">
+            <Plus className="h-4 w-4" />
+            Adicionar Produto
+          </Button>
+        )}
       </div>
 
       {/* Products List */}
@@ -365,6 +398,9 @@ const ProductsTab = ({ onMetricsChange }: ProductsTabProps) => {
         product={editingProduct}
         onSave={handleProductSaved}
         onClose={handleDialogClose}
+        currentProductCount={products.length}
+        productLimit={productLimit}
+        planName={planName}
       />
 
       {/* Highlight Dialog */}

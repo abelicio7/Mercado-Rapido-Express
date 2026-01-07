@@ -38,6 +38,9 @@ interface ProductFormDialogProps {
   product: Product | null;
   onSave: (productId?: string) => void;
   onClose: () => void;
+  currentProductCount: number;
+  productLimit: number;
+  planName: string;
 }
 
 const productSchema = z.object({
@@ -54,6 +57,9 @@ const ProductFormDialog = ({
   product,
   onSave,
   onClose,
+  currentProductCount,
+  productLimit,
+  planName,
 }: ProductFormDialogProps) => {
   const { user } = useAuth();
   const { toast } = useToast();
@@ -218,6 +224,16 @@ const ProductFormDialog = ({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!validate() || !user) return;
+    
+    // Check product limit for new products
+    if (!product && currentProductCount >= productLimit) {
+      toast({
+        variant: "destructive",
+        title: "Limite atingido",
+        description: `Você atingiu o limite de ${productLimit} produtos do ${planName}. Faça upgrade para adicionar mais.`,
+      });
+      return;
+    }
     
     setLoading(true);
     
