@@ -109,6 +109,14 @@ serve(async (req: Request) => {
         ? "https://e2payments.explicador.co.mz/v1/c2b/mpesa-payment/999813"
         : "https://e2payments.explicador.co.mz/v1/c2b/emola-payment/999814";
 
+    // Reference max 27 chars: MR-BSC-M-12345678 = 18 chars
+    const planCode = planType === "basico" ? "BSC" : "PRO";
+    const periodCode = billingPeriod === "mensal" ? "M" : "A";
+    const shortId = userId.slice(0, 8);
+    const reference = `MR-${planCode}-${periodCode}-${shortId}`;
+
+    console.log("Payment reference:", reference, "Length:", reference.length);
+
     const paymentResp = await fetch(endpoint, {
       method: "POST",
       headers: {
@@ -118,7 +126,7 @@ serve(async (req: Request) => {
       body: new URLSearchParams({
         client_id: clientId,
         amount: amount.toString(),
-        reference: `mercadorapido-${planType}-${billingPeriod}-${userId.slice(0, 8)}`,
+        reference: reference,
         phone: phoneNumber,
       }),
     });
