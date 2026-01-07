@@ -19,11 +19,14 @@ import {
   Loader2,
   Store,
   ArrowLeft,
+  Sparkles,
 } from "lucide-react";
 import logo from "@/assets/logo.jpg";
 import ProductsTab from "@/components/seller/ProductsTab";
 import MetricsCard from "@/components/seller/MetricsCard";
 import StoreSettingsTab from "@/components/seller/StoreSettingsTab";
+import SelectProductDialog from "@/components/seller/SelectProductDialog";
+import HighlightDialog from "@/components/seller/HighlightDialog";
 
 const SellerDashboard = () => {
   const { user, profile, loading: authLoading } = useAuth();
@@ -38,6 +41,8 @@ const SellerDashboard = () => {
     clicksThisMonth: 0,
   });
   const [loadingMetrics, setLoadingMetrics] = useState(true);
+  const [showSelectProduct, setShowSelectProduct] = useState(false);
+  const [highlightProduct, setHighlightProduct] = useState<{ id: string; name: string } | null>(null);
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -355,9 +360,10 @@ const SellerDashboard = () => {
                 </Button>
                 <Button
                   variant="outline"
-                  className="h-auto py-4 flex-col gap-2 border-gold text-gold hover:bg-gold/10"
+                  className="h-auto py-4 flex-col gap-2 border-highlight/30 text-highlight hover:bg-highlight/10 hover:border-highlight"
+                  onClick={() => setShowSelectProduct(true)}
                 >
-                  <TrendingUp className="h-6 w-6" />
+                  <Sparkles className="h-6 w-6" />
                   <span>Destacar Produto</span>
                 </Button>
               </div>
@@ -371,6 +377,29 @@ const SellerDashboard = () => {
 
         {activeTab === "settings" && <StoreSettingsTab />}
       </div>
+
+      {/* Select Product Dialog */}
+      <SelectProductDialog
+        open={showSelectProduct}
+        onOpenChange={setShowSelectProduct}
+        onSelect={(product) => {
+          setHighlightProduct({ id: product.id, name: product.name });
+        }}
+      />
+
+      {/* Highlight Dialog */}
+      {highlightProduct && (
+        <HighlightDialog
+          open={!!highlightProduct}
+          onOpenChange={(open) => !open && setHighlightProduct(null)}
+          productId={highlightProduct.id}
+          productName={highlightProduct.name}
+          onSuccess={() => {
+            setHighlightProduct(null);
+            fetchMetrics();
+          }}
+        />
+      )}
     </div>
   );
 };
