@@ -228,8 +228,8 @@ const SellerDashboard = () => {
                 <p className="text-sm text-muted-foreground mb-3">
                   Sua loja está oculta. Renove para voltar a aparecer.
                 </p>
-                <Button size="sm" className="bg-primary hover:bg-primary/90">
-                  Renovar Plano
+                <Button size="sm" className="bg-primary hover:bg-primary/90" asChild>
+                  <Link to="/planos">Renovar Plano</Link>
                 </Button>
               </div>
             )}
@@ -324,8 +324,8 @@ const SellerDashboard = () => {
                   </div>
                   <div className="flex gap-2">
                     {planStatus.status !== "active" && (
-                      <Button className="bg-primary hover:bg-primary/90">
-                        Escolher Plano
+                      <Button className="bg-primary hover:bg-primary/90" asChild>
+                        <Link to="/planos">Escolher Plano</Link>
                       </Button>
                     )}
                   </div>

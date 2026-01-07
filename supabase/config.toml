@@ -1,1 +1,7 @@
 project_id = "ggbcyjzcenrjbsxaitzk"
+
+[functions.process-subscription-payment]
+verify_jwt = false
+
+[functions.process-highlight-payment]
+verify_jwt = false
