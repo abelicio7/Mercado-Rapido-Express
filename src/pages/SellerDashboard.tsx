@@ -23,6 +23,7 @@ import {
 import logo from "@/assets/logo.jpg";
 import ProductsTab from "@/components/seller/ProductsTab";
 import MetricsCard from "@/components/seller/MetricsCard";
+import StoreSettingsTab from "@/components/seller/StoreSettingsTab";
 
 const SellerDashboard = () => {
   const { user, profile, loading: authLoading } = useAuth();
@@ -193,8 +194,12 @@ const SellerDashboard = () => {
         <div className="bg-card rounded-2xl p-6 shadow-card mb-6">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div className="flex items-start gap-4">
-              <div className="w-16 h-16 rounded-xl bg-primary/10 flex items-center justify-center">
-                <Store className="h-8 w-8 text-primary" />
+              <div className="w-16 h-16 rounded-xl bg-primary/10 flex items-center justify-center overflow-hidden">
+                {profile.avatar_url ? (
+                  <img src={profile.avatar_url} alt={profile.store_name || "Loja"} className="w-full h-full object-cover" />
+                ) : (
+                  <Store className="h-8 w-8 text-primary" />
+                )}
               </div>
               <div>
                 <div className="flex items-center gap-2">
@@ -364,12 +369,7 @@ const SellerDashboard = () => {
           <ProductsTab onMetricsChange={fetchMetrics} />
         )}
 
-        {activeTab === "settings" && (
-          <div className="bg-card rounded-2xl p-6 shadow-card">
-            <h3 className="font-display text-lg font-semibold mb-4">Configurações da Loja</h3>
-            <p className="text-muted-foreground">Em breve: edição de dados da loja, foto de perfil e mais.</p>
-          </div>
-        )}
+        {activeTab === "settings" && <StoreSettingsTab />}
       </div>
     </div>
   );
