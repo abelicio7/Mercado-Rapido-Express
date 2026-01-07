@@ -1,7 +1,42 @@
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Search, MapPin, ShieldCheck, Store, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
+const provinces = [
+  "Maputo Cidade",
+  "Maputo Província",
+  "Gaza",
+  "Inhambane",
+  "Sofala",
+  "Manica",
+  "Tete",
+  "Zambézia",
+  "Nampula",
+  "Niassa",
+  "Cabo Delgado",
+];
+
 const HeroSection = () => {
+  const navigate = useNavigate();
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedProvince, setSelectedProvince] = useState("");
+
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    const params = new URLSearchParams();
+    if (searchQuery.trim()) {
+      params.set("q", searchQuery.trim());
+    }
+    if (selectedProvince) {
+      params.set("provincia", selectedProvince);
+    }
+    
+    const queryString = params.toString();
+    navigate(`/produtos${queryString ? `?${queryString}` : ""}`);
+  };
+
   return (
     <section className="relative gradient-hero text-primary-foreground overflow-hidden">
       {/* Background Pattern */}
@@ -30,37 +65,38 @@ const HeroSection = () => {
           </p>
 
           {/* Search Bar */}
-          <div className="bg-white rounded-2xl p-2 shadow-soft max-w-2xl mx-auto">
+          <form onSubmit={handleSearch} className="bg-white rounded-2xl p-2 shadow-soft max-w-2xl mx-auto">
             <div className="flex flex-col sm:flex-row gap-2">
               <div className="flex-1 flex items-center gap-2 px-4 py-2">
                 <Search className="h-5 w-5 text-muted-foreground" />
                 <input
                   type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
                   placeholder="O que procura? Ex: telemóvel, roupa, móveis..."
                   className="flex-1 bg-transparent text-foreground placeholder:text-muted-foreground focus:outline-none text-sm md:text-base"
                 />
               </div>
               <div className="flex items-center gap-2 px-4 py-2 border-t sm:border-t-0 sm:border-l border-border">
                 <MapPin className="h-5 w-5 text-muted-foreground" />
-                <select className="bg-transparent text-foreground focus:outline-none text-sm md:text-base cursor-pointer">
+                <select 
+                  value={selectedProvince}
+                  onChange={(e) => setSelectedProvince(e.target.value)}
+                  className="bg-transparent text-foreground focus:outline-none text-sm md:text-base cursor-pointer"
+                >
                   <option value="">Toda Moçambique</option>
-                  <option value="maputo">Maputo</option>
-                  <option value="gaza">Gaza</option>
-                  <option value="inhambane">Inhambane</option>
-                  <option value="sofala">Sofala</option>
-                  <option value="manica">Manica</option>
-                  <option value="tete">Tete</option>
-                  <option value="zambezia">Zambézia</option>
-                  <option value="nampula">Nampula</option>
-                  <option value="niassa">Niassa</option>
-                  <option value="cabo-delgado">Cabo Delgado</option>
+                  {provinces.map((province) => (
+                    <option key={province} value={province}>
+                      {province}
+                    </option>
+                  ))}
                 </select>
               </div>
-              <Button size="lg" className="bg-primary hover:bg-primary/90 text-primary-foreground">
+              <Button type="submit" size="lg" className="bg-primary hover:bg-primary/90 text-primary-foreground">
                 Buscar
               </Button>
             </div>
-          </div>
+          </form>
 
           {/* Trust Indicators */}
           <div className="flex flex-wrap justify-center gap-6 pt-4">
