@@ -78,6 +78,12 @@ serve(async (req: Request) => {
         ? "https://e2payments.explicador.co.mz/v1/c2b/mpesa-payment/999813"
         : "https://e2payments.explicador.co.mz/v1/c2b/emola-payment/999814";
 
+    // Reference max 27 chars: MR-HL-3D-12345678 = 18 chars
+    const shortProductId = productId.slice(0, 8);
+    const reference = `MR-HL-${days}D-${shortProductId}`;
+
+    console.log("Highlight reference:", reference, "Length:", reference.length);
+
     const paymentResp = await fetch(endpoint, {
       method: "POST",
       headers: {
@@ -87,7 +93,7 @@ serve(async (req: Request) => {
       body: new URLSearchParams({
         client_id: clientId,
         amount: amount.toString(),
-        reference: `highlight-${productId.slice(0, 8)}-${days}d`,
+        reference: reference,
         phone: phoneNumber,
       }),
     });
