@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useSearchParams } from "react-router-dom";
+import { useSearchParams, Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import Header from "@/components/layout/Header";
@@ -435,7 +435,7 @@ const Products = () => {
                       </div>
 
                       {/* Image */}
-                      <div className="aspect-square overflow-hidden bg-muted">
+                      <Link to={`/produtos/${product.id}`} className="block aspect-square overflow-hidden bg-muted">
                         {product.images && product.images.length > 0 ? (
                           <img
                             src={product.images[0]}
@@ -447,15 +447,17 @@ const Products = () => {
                             <Package className="h-12 w-12 text-muted-foreground" />
                           </div>
                         )}
-                      </div>
+                      </Link>
 
                       {/* Content */}
                       <div className="p-4 space-y-3">
                         {/* Product Info */}
                         <div>
-                          <h3 className="font-semibold text-foreground line-clamp-2 group-hover:text-primary transition-colors">
-                            {product.name}
-                          </h3>
+                          <Link to={`/produtos/${product.id}`}>
+                            <h3 className="font-semibold text-foreground line-clamp-2 group-hover:text-primary transition-colors">
+                              {product.name}
+                            </h3>
+                          </Link>
                           <p className="text-2xl font-bold text-primary mt-1">
                             {formatPrice(product.price)}
                           </p>
