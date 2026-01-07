@@ -130,32 +130,36 @@ const SellerDashboard = () => {
     if (planExpires && planExpires > now) {
       const daysLeft = Math.ceil((planExpires.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
       return {
-        status: "active",
+        status: "active" as const,
         label: profile.plan_type === "pro" ? "Plano Pro" : "Plano Básico",
         daysLeft,
         color: "bg-success text-success-foreground",
+        isInTrial: false,
       };
     }
     
     if (trialEnds && trialEnds > now) {
       const daysLeft = Math.ceil((trialEnds.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
       return {
-        status: "trial",
+        status: "trial" as const,
         label: "Período de Teste",
         daysLeft,
         color: "bg-gold text-gold-foreground",
+        isInTrial: true,
       };
     }
     
     return {
-      status: "expired",
+      status: "expired" as const,
       label: "Plano Expirado",
       daysLeft: 0,
       color: "bg-destructive text-destructive-foreground",
+      isInTrial: false,
     };
   };
 
   const planStatus = getPlanStatus();
+  const isInTrial = planStatus?.isInTrial ?? false;
 
   if (authLoading || !profile) {
     return (
@@ -372,7 +376,11 @@ const SellerDashboard = () => {
         )}
 
         {activeTab === "products" && (
-          <ProductsTab onMetricsChange={fetchMetrics} />
+          <ProductsTab 
+            onMetricsChange={fetchMetrics} 
+            planType={profile.plan_type}
+            isInTrial={isInTrial}
+          />
         )}
 
         {activeTab === "settings" && <StoreSettingsTab />}
