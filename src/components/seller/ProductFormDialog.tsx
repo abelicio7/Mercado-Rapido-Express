@@ -12,7 +12,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Upload, X, Image as ImageIcon } from "lucide-react";
+import { Loader2, Upload, X, Image as ImageIcon, Sparkles } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
 import { z } from "zod";
 
 interface Category {
@@ -35,7 +36,7 @@ interface ProductFormDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   product: Product | null;
-  onSave: () => void;
+  onSave: (productId?: string) => void;
   onClose: () => void;
 }
 
@@ -70,6 +71,7 @@ const ProductFormDialog = ({
   const [stock, setStock] = useState("");
   const [categoryId, setCategoryId] = useState("");
   const [images, setImages] = useState<string[]>([]);
+  const [wantsHighlight, setWantsHighlight] = useState(false);
 
   useEffect(() => {
     fetchCategories();
@@ -83,6 +85,7 @@ const ProductFormDialog = ({
       setStock(product.stock.toString());
       setCategoryId(product.category_id || "");
       setImages(product.images || []);
+      setWantsHighlight(false);
     } else {
       resetForm();
     }
@@ -106,6 +109,7 @@ const ProductFormDialog = ({
     setStock("");
     setCategoryId("");
     setImages([]);
+    setWantsHighlight(false);
     setErrors({});
   };
 
@@ -243,9 +247,11 @@ const ProductFormDialog = ({
         });
       } else {
         // Create
-        const { error } = await supabase
+        const { data: newProduct, error } = await supabase
           .from("products")
-          .insert(productData);
+          .insert(productData)
+          .select()
+          .single();
         
         if (error) throw error;
         
@@ -253,6 +259,14 @@ const ProductFormDialog = ({
           title: "Produto criado",
           description: "O produto foi adicionado com sucesso.",
         });
+
+        // If user wants to highlight, pass the new product id
+        if (wantsHighlight && newProduct) {
+          onSave(newProduct.id);
+        } else {
+          onSave();
+        }
+        return;
       }
       
       onSave();
@@ -406,6 +420,32 @@ const ProductFormDialog = ({
             <div className="border border-dashed border-border rounded-lg p-8 text-center text-muted-foreground">
               <ImageIcon className="h-8 w-8 mx-auto mb-2 opacity-50" />
               <p className="text-sm">Nenhuma imagem adicionada</p>
+            </div>
+          )}
+
+          {/* Highlight Option - only show for new products */}
+          {!product && (
+            <div className="bg-highlight/10 rounded-xl p-4 border border-highlight/20">
+              <div className="flex items-start gap-3">
+                <Checkbox
+                  id="highlight"
+                  checked={wantsHighlight}
+                  onCheckedChange={(checked) => setWantsHighlight(checked === true)}
+                  className="mt-1"
+                />
+                <div className="flex-1">
+                  <Label
+                    htmlFor="highlight"
+                    className="flex items-center gap-2 cursor-pointer font-medium"
+                  >
+                    <Sparkles className="h-4 w-4 text-highlight" />
+                    Destacar este produto
+                  </Label>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Produtos destacados aparecem no topo das buscas. A partir de 197 MT/dia.
+                  </p>
+                </div>
+              </div>
             </div>
           )}
           
