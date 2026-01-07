@@ -12,8 +12,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Slider } from "@/components/ui/slider";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Sparkles, Check } from "lucide-react";
+import { Loader2, Sparkles } from "lucide-react";
 
 interface HighlightDialogProps {
   open: boolean;
@@ -24,13 +25,8 @@ interface HighlightDialogProps {
 }
 
 const PRICE_PER_DAY = 197;
-
-const dayOptions = [
-  { days: 3, label: "3 dias", popular: false },
-  { days: 7, label: "7 dias", popular: true },
-  { days: 15, label: "15 dias", popular: false },
-  { days: 30, label: "30 dias", popular: false },
-];
+const MIN_DAYS = 1;
+const MAX_DAYS = 30;
 
 const HighlightDialog = ({
   open,
@@ -146,35 +142,26 @@ const HighlightDialog = ({
         </DialogHeader>
 
         <div className="space-y-6">
-          {/* Days Selection */}
-          <div className="space-y-3">
-            <Label>Duração do destaque</Label>
-            <div className="grid grid-cols-2 gap-2">
-              {dayOptions.map((option) => (
-                <button
-                  key={option.days}
-                  type="button"
-                  onClick={() => setSelectedDays(option.days)}
-                  className={`relative p-3 rounded-xl border-2 text-left transition-all ${
-                    selectedDays === option.days
-                      ? "border-primary bg-primary/5"
-                      : "border-border hover:border-primary/50"
-                  }`}
-                >
-                  {option.popular && (
-                    <span className="absolute -top-2 right-2 text-[10px] bg-primary text-primary-foreground px-2 py-0.5 rounded-full">
-                      Popular
-                    </span>
-                  )}
-                  <div className="font-semibold">{option.label}</div>
-                  <div className="text-sm text-muted-foreground">
-                    {formatPrice(option.days * PRICE_PER_DAY)}
-                  </div>
-                  {selectedDays === option.days && (
-                    <Check className="absolute top-3 right-3 h-4 w-4 text-primary" />
-                  )}
-                </button>
-              ))}
+          {/* Days Selection with Slider */}
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <Label>Duração do destaque</Label>
+              <div className="text-right">
+                <span className="text-2xl font-bold text-primary">{selectedDays}</span>
+                <span className="text-muted-foreground ml-1">dia{selectedDays > 1 ? "s" : ""}</span>
+              </div>
+            </div>
+            <Slider
+              value={[selectedDays]}
+              onValueChange={(value) => setSelectedDays(value[0])}
+              min={MIN_DAYS}
+              max={MAX_DAYS}
+              step={1}
+              className="w-full"
+            />
+            <div className="flex justify-between text-xs text-muted-foreground">
+              <span>1 dia</span>
+              <span>30 dias</span>
             </div>
           </div>
 
