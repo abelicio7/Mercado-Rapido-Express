@@ -17,6 +17,7 @@ import {
   ImageIcon,
 } from "lucide-react";
 import ProductFormDialog from "./ProductFormDialog";
+import HighlightDialog from "./HighlightDialog";
 
 interface Product {
   id: string;
@@ -48,6 +49,7 @@ const ProductsTab = ({ onMetricsChange }: ProductsTabProps) => {
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [togglingId, setTogglingId] = useState<string | null>(null);
+  const [highlightProduct, setHighlightProduct] = useState<Product | null>(null);
 
   useEffect(() => {
     if (user) {
@@ -178,10 +180,27 @@ const ProductsTab = ({ onMetricsChange }: ProductsTabProps) => {
     setEditingProduct(null);
   };
 
-  const handleProductSaved = () => {
+  const handleProductSaved = async (newProductIdForHighlight?: string) => {
     handleDialogClose();
-    fetchProducts();
+    await fetchProducts();
     onMetricsChange();
+
+    // If a new product ID is provided, open highlight dialog
+    if (newProductIdForHighlight) {
+      // Find the product we just created
+      const { data: newProduct } = await supabase
+        .from("products")
+        .select("id, name")
+        .eq("id", newProductIdForHighlight)
+        .maybeSingle();
+
+      if (newProduct) {
+        setHighlightProduct({
+          id: newProduct.id,
+          name: newProduct.name,
+        } as Product);
+      }
+    }
   };
 
   const formatPrice = (value: number) => {
@@ -282,6 +301,18 @@ const ProductsTab = ({ onMetricsChange }: ProductsTabProps) => {
 
               {/* Actions */}
               <div className="flex sm:flex-col gap-2 flex-shrink-0">
+                {/* Highlight Button */}
+                {!product.is_highlighted && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setHighlightProduct(product)}
+                    className="gap-2 text-highlight hover:text-highlight border-highlight/30 hover:border-highlight hover:bg-highlight/5"
+                  >
+                    <Sparkles className="h-4 w-4" />
+                    <span className="sm:hidden">Destacar</span>
+                  </Button>
+                )}
                 <Button
                   variant="outline"
                   size="sm"
@@ -335,6 +366,21 @@ const ProductsTab = ({ onMetricsChange }: ProductsTabProps) => {
         onSave={handleProductSaved}
         onClose={handleDialogClose}
       />
+
+      {/* Highlight Dialog */}
+      {highlightProduct && (
+        <HighlightDialog
+          open={!!highlightProduct}
+          onOpenChange={(open) => !open && setHighlightProduct(null)}
+          productId={highlightProduct.id}
+          productName={highlightProduct.name}
+          onSuccess={() => {
+            setHighlightProduct(null);
+            fetchProducts();
+            onMetricsChange();
+          }}
+        />
+      )}
     </div>
   );
 };
