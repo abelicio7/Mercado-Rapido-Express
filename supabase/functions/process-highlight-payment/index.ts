@@ -78,9 +78,9 @@ serve(async (req: Request) => {
         ? "https://e2payments.explicador.co.mz/v1/c2b/mpesa-payment/999813"
         : "https://e2payments.explicador.co.mz/v1/c2b/emola-payment/999814";
 
-    // Reference max 27 chars: MR-HL-3D-12345678 = 18 chars
-    const shortProductId = productId.slice(0, 8);
-    const reference = `MR-HL-${days}D-${shortProductId}`;
+    // Reference: only alphanumeric, max 20 chars for M-Pesa compatibility
+    const shortProductId = productId.slice(0, 6).replace(/-/g, "");
+    const reference = `MRHL${days}D${shortProductId}`;
 
     console.log("Highlight reference:", reference, "Length:", reference.length);
 
