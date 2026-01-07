@@ -1,4 +1,5 @@
-import { MapPin, MessageCircle, ShieldCheck, Sparkles } from "lucide-react";
+import { Link } from "react-router-dom";
+import { MapPin, MessageCircle, ShieldCheck, Sparkles, Store } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 
@@ -13,9 +14,11 @@ interface ProductCardProps {
   storeWhatsApp: string;
   isVerified?: boolean;
   isHighlighted?: boolean;
+  sellerId?: string;
 }
 
 const ProductCard = ({
+  id,
   name,
   price,
   image,
@@ -25,6 +28,7 @@ const ProductCard = ({
   storeWhatsApp,
   isVerified = false,
   isHighlighted = false,
+  sellerId,
 }: ProductCardProps) => {
   const formatPrice = (value: number) => {
     return new Intl.NumberFormat("pt-MZ", {
@@ -42,18 +46,30 @@ const ProductCard = ({
 
   const stockStatus = getStockStatus();
 
-  const handleInterestClick = () => {
+  const handleInterestClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
     const message = encodeURIComponent(
       `Olá, vi o produto "${name}" no Mercado Rápido Express e gostaria de saber mais.`
     );
     window.open(`https://wa.me/${storeWhatsApp}?text=${message}`, "_blank");
   };
 
+  const handleStoreClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+  };
+
+  // Check if this is a mock product (no sellerId or starts with 'mock-')
+  const isMockProduct = !sellerId || id.startsWith("mock-");
+
   return (
-    <div
-      className={`group relative bg-card rounded-2xl overflow-hidden shadow-card hover:shadow-soft transition-all duration-300 ${
+    <Link
+      to={isMockProduct ? "#" : `/produtos/${id}`}
+      className={`group relative bg-card rounded-2xl overflow-hidden shadow-card hover:shadow-soft transition-all duration-300 block ${
         isHighlighted ? "ring-2 ring-highlight shadow-highlight" : ""
-      }`}
+      } ${isMockProduct ? "cursor-default" : ""}`}
+      onClick={isMockProduct ? (e) => e.preventDefault() : undefined}
     >
       {/* Highlight Badge */}
       {isHighlighted && (
@@ -96,12 +112,26 @@ const ProductCard = ({
         {/* Store Info */}
         <div className="flex items-start gap-2 pt-2 border-t border-border">
           <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-1">
-              <span className="text-sm font-medium truncate">{storeName}</span>
-              {isVerified && (
-                <ShieldCheck className="h-4 w-4 text-success flex-shrink-0" />
-              )}
-            </div>
+            {sellerId && !isMockProduct ? (
+              <Link
+                to={`/loja/${sellerId}`}
+                onClick={handleStoreClick}
+                className="flex items-center gap-1 hover:text-primary transition-colors"
+              >
+                <Store className="h-3 w-3 flex-shrink-0" />
+                <span className="text-sm font-medium truncate">{storeName}</span>
+                {isVerified && (
+                  <ShieldCheck className="h-4 w-4 text-success flex-shrink-0" />
+                )}
+              </Link>
+            ) : (
+              <div className="flex items-center gap-1">
+                <span className="text-sm font-medium truncate">{storeName}</span>
+                {isVerified && (
+                  <ShieldCheck className="h-4 w-4 text-success flex-shrink-0" />
+                )}
+              </div>
+            )}
             <div className="flex items-center gap-1 text-xs text-muted-foreground mt-0.5">
               <MapPin className="h-3 w-3" />
               <span className="truncate">{storeLocation}</span>
@@ -119,7 +149,7 @@ const ProductCard = ({
           Tenho Interesse
         </Button>
       </div>
-    </div>
+    </Link>
   );
 };
 
