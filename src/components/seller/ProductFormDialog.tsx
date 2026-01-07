@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import {
@@ -12,7 +12,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2 } from "lucide-react";
+import { Loader2, Upload, X, Image as ImageIcon } from "lucide-react";
 import { z } from "zod";
 
 interface Category {
@@ -56,9 +56,11 @@ const ProductFormDialog = ({
 }: ProductFormDialogProps) => {
   const { user } = useAuth();
   const { toast } = useToast();
+  const fileInputRef = useRef<HTMLInputElement>(null);
   
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(false);
+  const [uploading, setUploading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   
   // Form state
@@ -67,7 +69,7 @@ const ProductFormDialog = ({
   const [price, setPrice] = useState("");
   const [stock, setStock] = useState("");
   const [categoryId, setCategoryId] = useState("");
-  const [imageUrl, setImageUrl] = useState("");
+  const [images, setImages] = useState<string[]>([]);
 
   useEffect(() => {
     fetchCategories();
@@ -80,7 +82,7 @@ const ProductFormDialog = ({
       setPrice(product.price.toString());
       setStock(product.stock.toString());
       setCategoryId(product.category_id || "");
-      setImageUrl(product.images?.[0] || "");
+      setImages(product.images || []);
     } else {
       resetForm();
     }
@@ -103,7 +105,7 @@ const ProductFormDialog = ({
     setPrice("");
     setStock("");
     setCategoryId("");
-    setImageUrl("");
+    setImages([]);
     setErrors({});
   };
 
@@ -136,6 +138,79 @@ const ProductFormDialog = ({
     return Object.keys(newErrors).length === 0;
   };
 
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0 || !user) return;
+
+    setUploading(true);
+    const newImages: string[] = [];
+
+    try {
+      for (const file of Array.from(files)) {
+        // Validate file type
+        if (!file.type.startsWith('image/')) {
+          toast({
+            variant: "destructive",
+            title: "Ficheiro inválido",
+            description: "Apenas imagens são permitidas.",
+          });
+          continue;
+        }
+
+        // Validate file size (max 5MB)
+        if (file.size > 5 * 1024 * 1024) {
+          toast({
+            variant: "destructive",
+            title: "Ficheiro muito grande",
+            description: "O tamanho máximo é 5MB.",
+          });
+          continue;
+        }
+
+        const fileExt = file.name.split('.').pop();
+        const fileName = `${user.id}/${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
+
+        const { error: uploadError } = await supabase.storage
+          .from('product-images')
+          .upload(fileName, file);
+
+        if (uploadError) {
+          console.error('Upload error:', uploadError);
+          throw uploadError;
+        }
+
+        const { data: { publicUrl } } = supabase.storage
+          .from('product-images')
+          .getPublicUrl(fileName);
+
+        newImages.push(publicUrl);
+      }
+
+      setImages(prev => [...prev, ...newImages]);
+      
+      toast({
+        title: "Imagem carregada",
+        description: `${newImages.length} imagem(s) adicionada(s).`,
+      });
+    } catch (error: any) {
+      console.error('Error uploading:', error);
+      toast({
+        variant: "destructive",
+        title: "Erro ao carregar",
+        description: error.message || "Não foi possível carregar a imagem.",
+      });
+    } finally {
+      setUploading(false);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+    }
+  };
+
+  const handleRemoveImage = (indexToRemove: number) => {
+    setImages(prev => prev.filter((_, index) => index !== indexToRemove));
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!validate() || !user) return;
@@ -149,7 +224,7 @@ const ProductFormDialog = ({
         price: parseFloat(price),
         stock: parseInt(stock) || 0,
         category_id: categoryId || null,
-        images: imageUrl.trim() ? [imageUrl.trim()] : [],
+        images: images,
         seller_id: user.id,
       };
       
@@ -275,28 +350,62 @@ const ProductFormDialog = ({
           </div>
           
           <div className="space-y-2">
-            <Label htmlFor="imageUrl">URL da imagem</Label>
-            <Input
-              id="imageUrl"
-              value={imageUrl}
-              onChange={(e) => setImageUrl(e.target.value)}
-              placeholder="https://exemplo.com/imagem.jpg"
+            <Label>Imagens do produto</Label>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              multiple
+              onChange={handleFileUpload}
+              className="hidden"
             />
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => fileInputRef.current?.click()}
+              disabled={uploading}
+              className="w-full"
+            >
+              {uploading ? (
+                <Loader2 className="h-4 w-4 animate-spin mr-2" />
+              ) : (
+                <Upload className="h-4 w-4 mr-2" />
+              )}
+              {uploading ? "A carregar..." : "Carregar imagens"}
+            </Button>
             <p className="text-xs text-muted-foreground">
-              Cole o link de uma imagem do seu produto
+              Formatos: JPG, PNG, WebP. Máximo: 5MB por imagem.
             </p>
           </div>
           
-          {imageUrl && (
-            <div className="rounded-lg overflow-hidden border border-border">
-              <img
-                src={imageUrl}
-                alt="Preview"
-                className="w-full h-40 object-cover"
-                onError={(e) => {
-                  (e.target as HTMLImageElement).src = "https://via.placeholder.com/400x300?text=Imagem+inv%C3%A1lida";
-                }}
-              />
+          {images.length > 0 && (
+            <div className="grid grid-cols-3 gap-2">
+              {images.map((img, index) => (
+                <div key={index} className="relative group rounded-lg overflow-hidden border border-border">
+                  <img
+                    src={img}
+                    alt={`Imagem ${index + 1}`}
+                    className="w-full h-24 object-cover"
+                    onError={(e) => {
+                      (e.target as HTMLImageElement).src = "https://via.placeholder.com/200x150?text=Erro";
+                    }}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => handleRemoveImage(index)}
+                    className="absolute top-1 right-1 bg-destructive text-destructive-foreground rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                  >
+                    <X className="h-3 w-3" />
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+          
+          {images.length === 0 && (
+            <div className="border border-dashed border-border rounded-lg p-8 text-center text-muted-foreground">
+              <ImageIcon className="h-8 w-8 mx-auto mb-2 opacity-50" />
+              <p className="text-sm">Nenhuma imagem adicionada</p>
             </div>
           )}
           
@@ -309,7 +418,7 @@ const ProductFormDialog = ({
             >
               Cancelar
             </Button>
-            <Button type="submit" className="flex-1" disabled={loading}>
+            <Button type="submit" className="flex-1" disabled={loading || uploading}>
               {loading ? (
                 <Loader2 className="h-4 w-4 animate-spin mr-2" />
               ) : null}
