@@ -1,4 +1,5 @@
 import { Store, TrendingUp, Eye, Sparkles, Check } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 
@@ -27,6 +28,12 @@ const plans = [
 ];
 
 const ForSellersSection = () => {
+  const navigate = useNavigate();
+
+  const handlePlanClick = () => {
+    navigate("/auth?tipo=vendedor");
+  };
+
   return (
     <section className="py-16 md:py-20 bg-background">
       <div className="container">
@@ -115,6 +122,7 @@ const ForSellersSection = () => {
                 </div>
 
                 <Button
+                  onClick={handlePlanClick}
                   className={`w-full ${
                     plan.popular
                       ? "bg-primary hover:bg-primary/90"
@@ -133,7 +141,11 @@ const ForSellersSection = () => {
               <p className="text-sm text-muted-foreground mb-4">
                 Coloque seus produtos no topo das buscas por apenas 197 MT/dia
               </p>
-              <Button variant="outline" className="border-gold text-gold hover:bg-gold/10">
+              <Button 
+                onClick={handlePlanClick}
+                variant="outline" 
+                className="border-gold text-gold hover:bg-gold/10"
+              >
                 Saber Mais
               </Button>
             </div>
