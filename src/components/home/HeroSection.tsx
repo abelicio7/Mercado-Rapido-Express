@@ -84,7 +84,7 @@ const HeroSection = () => {
                   onChange={(e) => setSelectedProvince(e.target.value)}
                   className="bg-transparent text-foreground focus:outline-none text-sm md:text-base cursor-pointer"
                 >
-                  <option value="">Toda Moçambique</option>
+                  <option value="">Todo Moçambique</option>
                   {provinces.map((province) => (
                     <option key={province} value={province}>
                       {province}
