@@ -26,15 +26,15 @@ const Footer = () => {
               <Link to="/produtos" className="text-sm text-primary-foreground/70 hover:text-primary-foreground transition-colors">
                 Ver Produtos
               </Link>
-              <Link to="/lojas" className="text-sm text-primary-foreground/70 hover:text-primary-foreground transition-colors">
+              <Link to="/produtos" className="text-sm text-primary-foreground/70 hover:text-primary-foreground transition-colors">
                 Ver Lojas
               </Link>
-              <Link to="/categorias" className="text-sm text-primary-foreground/70 hover:text-primary-foreground transition-colors">
+              <Link to="/produtos" className="text-sm text-primary-foreground/70 hover:text-primary-foreground transition-colors">
                 Categorias
               </Link>
-              <Link to="/como-funciona" className="text-sm text-primary-foreground/70 hover:text-primary-foreground transition-colors">
+              <a href="/#como-funciona" className="text-sm text-primary-foreground/70 hover:text-primary-foreground transition-colors">
                 Como Funciona
-              </Link>
+              </a>
             </nav>
           </div>
 
@@ -42,16 +42,16 @@ const Footer = () => {
           <div className="space-y-4">
             <h4 className="font-display font-semibold">Para Vendedores</h4>
             <nav className="flex flex-col gap-2">
-              <Link to="/vender" className="text-sm text-primary-foreground/70 hover:text-primary-foreground transition-colors">
+              <Link to="/auth?tipo=vendedor" className="text-sm text-primary-foreground/70 hover:text-primary-foreground transition-colors">
                 Criar Minha Loja
               </Link>
               <Link to="/planos" className="text-sm text-primary-foreground/70 hover:text-primary-foreground transition-colors">
                 Planos e Preços
               </Link>
-              <Link to="/destaque" className="text-sm text-primary-foreground/70 hover:text-primary-foreground transition-colors">
+              <Link to="/auth?tipo=vendedor" className="text-sm text-primary-foreground/70 hover:text-primary-foreground transition-colors">
                 Destacar Produtos
               </Link>
-              <Link to="/verificacao" className="text-sm text-primary-foreground/70 hover:text-primary-foreground transition-colors">
+              <Link to="/auth?tipo=vendedor" className="text-sm text-primary-foreground/70 hover:text-primary-foreground transition-colors">
                 Selo de Verificação
               </Link>
             </nav>
