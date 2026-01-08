@@ -80,7 +80,7 @@ const CategoriesSection = () => {
   }
 
   return (
-    <section className="py-16 md:py-20 bg-background">
+    <section id="categorias" className="py-16 md:py-20 bg-background scroll-mt-20">
       <div className="container">
         {/* Header */}
         <div className="text-center space-y-3 mb-10">
