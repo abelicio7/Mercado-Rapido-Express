@@ -29,9 +29,9 @@ const Footer = () => {
               <Link to="/produtos" className="text-sm text-primary-foreground/70 hover:text-primary-foreground transition-colors">
                 Ver Lojas
               </Link>
-              <Link to="/produtos" className="text-sm text-primary-foreground/70 hover:text-primary-foreground transition-colors">
-                Categorias
-              </Link>
+              <a href="/#categorias" className="text-sm text-primary-foreground/70 hover:text-primary-foreground transition-colors">
+                Explorar Categorias
+              </a>
               <a href="/#como-funciona" className="text-sm text-primary-foreground/70 hover:text-primary-foreground transition-colors">
                 Como Funciona
               </a>
