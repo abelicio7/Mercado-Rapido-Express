@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
+import ShareButtons from "@/components/products/ShareButtons";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
@@ -457,6 +458,14 @@ const ProductDetails = () => {
                   </p>
                 </div>
               )}
+
+              {/* Share Buttons */}
+              <div className="pt-4 border-t border-border">
+                <ShareButtons
+                  productName={product.name}
+                  productUrl={`${window.location.origin}/produtos/${product.id}`}
+                />
+              </div>
             </div>
           </div>
         </div>
