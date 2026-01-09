@@ -12,6 +12,7 @@ import SellerDashboard from "./pages/SellerDashboard";
 import Planos from "./pages/Planos";
 import PlanosObrigado from "./pages/PlanosObrigado";
 import StorePage from "./pages/Store";
+import Stores from "./pages/Stores";
 import TermosDeUso from "./pages/TermosDeUso";
 import Privacidade from "./pages/Privacidade";
 import NotFound from "./pages/NotFound";
@@ -34,6 +35,7 @@ const App = () => (
             <Route path="/planos" element={<Planos />} />
             <Route path="/planos/obrigado" element={<PlanosObrigado />} />
             <Route path="/loja/:sellerId" element={<StorePage />} />
+            <Route path="/lojas" element={<Stores />} />
             <Route path="/termos" element={<TermosDeUso />} />
             <Route path="/privacidade" element={<Privacidade />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

@@ -26,7 +26,7 @@ const Footer = () => {
               <Link to="/produtos" className="text-sm text-primary-foreground/70 hover:text-primary-foreground transition-colors">
                 Ver Produtos
               </Link>
-              <Link to="/produtos" className="text-sm text-primary-foreground/70 hover:text-primary-foreground transition-colors">
+              <Link to="/lojas" className="text-sm text-primary-foreground/70 hover:text-primary-foreground transition-colors">
                 Ver Lojas
               </Link>
               <a href="/#categorias" className="text-sm text-primary-foreground/70 hover:text-primary-foreground transition-colors">
