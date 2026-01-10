@@ -4,6 +4,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
+import { FavoritesProvider } from "@/contexts/FavoritesContext";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import Products from "./pages/Products";
@@ -13,6 +14,7 @@ import Planos from "./pages/Planos";
 import PlanosObrigado from "./pages/PlanosObrigado";
 import StorePage from "./pages/Store";
 import Stores from "./pages/Stores";
+import Favoritos from "./pages/Favoritos";
 import TermosDeUso from "./pages/TermosDeUso";
 import Privacidade from "./pages/Privacidade";
 import NotFound from "./pages/NotFound";
@@ -26,21 +28,24 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <AuthProvider>
-          <Routes>
-            <Route path="/" element={<Index />} />
-            <Route path="/auth" element={<Auth />} />
-            <Route path="/produtos" element={<Products />} />
-            <Route path="/produtos/:id" element={<ProductDetails />} />
-            <Route path="/painel" element={<SellerDashboard />} />
-            <Route path="/planos" element={<Planos />} />
-            <Route path="/planos/obrigado" element={<PlanosObrigado />} />
-            <Route path="/loja/:sellerId" element={<StorePage />} />
-            <Route path="/lojas" element={<Stores />} />
-            <Route path="/termos" element={<TermosDeUso />} />
-            <Route path="/privacidade" element={<Privacidade />} />
-            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-            <Route path="*" element={<NotFound />} />
-          </Routes>
+          <FavoritesProvider>
+            <Routes>
+              <Route path="/" element={<Index />} />
+              <Route path="/auth" element={<Auth />} />
+              <Route path="/produtos" element={<Products />} />
+              <Route path="/produtos/:id" element={<ProductDetails />} />
+              <Route path="/painel" element={<SellerDashboard />} />
+              <Route path="/planos" element={<Planos />} />
+              <Route path="/planos/obrigado" element={<PlanosObrigado />} />
+              <Route path="/loja/:sellerId" element={<StorePage />} />
+              <Route path="/lojas" element={<Stores />} />
+              <Route path="/favoritos" element={<Favoritos />} />
+              <Route path="/termos" element={<TermosDeUso />} />
+              <Route path="/privacidade" element={<Privacidade />} />
+              {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </FavoritesProvider>
         </AuthProvider>
       </BrowserRouter>
     </TooltipProvider>
