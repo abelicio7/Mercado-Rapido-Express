@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { Menu, X, Search, MapPin, User, Store, LogOut } from "lucide-react";
+import { Menu, X, Search, MapPin, User, Store, LogOut, Heart } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
 import logo from "@/assets/logo.jpg";
@@ -49,6 +49,12 @@ const Header = () => {
           
           {user ? (
             <>
+              <Button variant="ghost" size="sm" asChild className="gap-2">
+                <Link to="/favoritos">
+                  <Heart className="h-4 w-4" />
+                  <span className="sr-only md:not-sr-only">Favoritos</span>
+                </Link>
+              </Button>
               {profile?.user_type === "vendedor" ? (
                 <Button variant="outline" size="sm" asChild className="gap-2">
                   <Link to="/painel">
@@ -135,6 +141,14 @@ const Header = () => {
             <div className="border-t border-border pt-3 mt-2 flex flex-col gap-2">
               {user ? (
                 <>
+                  <Link 
+                    to="/favoritos" 
+                    className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-accent transition-colors"
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    <Heart className="h-5 w-5 text-muted-foreground" />
+                    <span>Favoritos</span>
+                  </Link>
                   {profile?.user_type === "vendedor" ? (
                     <Button variant="outline" asChild className="w-full justify-start gap-2" onClick={() => setIsMenuOpen(false)}>
                       <Link to="/painel">

@@ -2,6 +2,7 @@ import { Link } from "react-router-dom";
 import { MapPin, MessageCircle, ShieldCheck, Sparkles, Store } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import FavoriteButton from "./FavoriteButton";
 
 interface ProductCardProps {
   id: string;
@@ -81,8 +82,9 @@ const ProductCard = ({
         </div>
       )}
 
-      {/* Stock Badge */}
-      <div className="absolute top-3 right-3 z-10">
+      {/* Favorite Button & Stock Badge */}
+      <div className="absolute top-3 right-3 z-10 flex items-center gap-2">
+        {!isMockProduct && <FavoriteButton productId={id} />}
         <Badge variant={stockStatus.variant} className="text-xs">
           {stockStatus.label}
         </Badge>
