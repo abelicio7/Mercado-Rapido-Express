@@ -16,6 +16,7 @@ import {
   Package,
   ArrowLeft,
 } from "lucide-react";
+import StoreReviews from "@/components/store/StoreReviews";
 
 interface StoreProfile {
   user_id: string;
@@ -273,6 +274,11 @@ const StorePage = () => {
               ))}
             </div>
           )}
+        </div>
+
+        {/* Reviews Section */}
+        <div className="mt-12 pt-8 border-t">
+          <StoreReviews storeId={sellerId!} />
         </div>
       </main>
 
