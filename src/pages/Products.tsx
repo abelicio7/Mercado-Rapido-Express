@@ -81,8 +81,11 @@ const Products = () => {
   }, []);
 
   useEffect(() => {
-    fetchProducts();
-  }, [selectedCategory, selectedProvince, selectedCity]);
+    // Only fetch products when categories are loaded (needed for category filter)
+    if (categories.length > 0 || !selectedCategory) {
+      fetchProducts();
+    }
+  }, [selectedCategory, selectedProvince, selectedCity, categories]);
 
   const fetchCategories = async () => {
     const { data, error } = await supabase
