@@ -4,6 +4,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
+import PromotionBadge from "@/components/products/PromotionBadge";
+import { isPromotionActive } from "@/lib/promotionUtils";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
@@ -35,6 +37,8 @@ interface Product {
   images: string[];
   is_highlighted: boolean;
   created_at: string;
+  promotional_price: number | null;
+  promotion_expires_at: string | null;
   categories: { name: string; slug: string } | null;
   profiles: {
     store_name: string;
@@ -420,15 +424,21 @@ const Products = () => {
                         product.is_highlighted ? "ring-2 ring-highlight shadow-highlight" : ""
                       }`}
                     >
-                      {/* Highlight Badge */}
-                      {product.is_highlighted && (
-                        <div className="absolute top-3 left-3 z-10">
+                      {/* Highlight & Promotion Badges */}
+                      <div className="absolute top-3 left-3 z-10 flex flex-col gap-1">
+                        {product.is_highlighted && (
                           <Badge className="bg-highlight text-highlight-foreground gap-1">
                             <Sparkles className="h-3 w-3" />
                             Destaque
                           </Badge>
-                        </div>
-                      )}
+                        )}
+                        <PromotionBadge
+                          originalPrice={product.price}
+                          promotionalPrice={product.promotional_price}
+                          promotionExpiresAt={product.promotion_expires_at}
+                          size="sm"
+                        />
+                      </div>
 
                       {/* Stock Badge */}
                       <div className="absolute top-3 right-3 z-10">
@@ -461,9 +471,20 @@ const Products = () => {
                               {product.name}
                             </h3>
                           </Link>
-                          <p className="text-2xl font-bold text-primary mt-1">
-                            {formatPrice(product.price)}
-                          </p>
+                          {isPromotionActive(product.promotional_price, product.promotion_expires_at) ? (
+                            <div className="flex items-baseline gap-2 mt-1">
+                              <p className="text-2xl font-bold text-destructive">
+                                {formatPrice(product.promotional_price!)}
+                              </p>
+                              <p className="text-sm text-muted-foreground line-through">
+                                {formatPrice(product.price)}
+                              </p>
+                            </div>
+                          ) : (
+                            <p className="text-2xl font-bold text-primary mt-1">
+                              {formatPrice(product.price)}
+                            </p>
+                          )}
                         </div>
 
                         {/* Store Info */}

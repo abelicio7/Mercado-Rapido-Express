@@ -100,6 +100,8 @@ export type Database = {
           is_highlighted: boolean | null
           name: string
           price: number
+          promotion_expires_at: string | null
+          promotional_price: number | null
           seller_id: string
           stock: number
           updated_at: string
@@ -115,6 +117,8 @@ export type Database = {
           is_highlighted?: boolean | null
           name: string
           price: number
+          promotion_expires_at?: string | null
+          promotional_price?: number | null
           seller_id: string
           stock?: number
           updated_at?: string
@@ -130,6 +134,8 @@ export type Database = {
           is_highlighted?: boolean | null
           name?: string
           price?: number
+          promotion_expires_at?: string | null
+          promotional_price?: number | null
           seller_id?: string
           stock?: number
           updated_at?: string

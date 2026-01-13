@@ -30,6 +30,8 @@ interface Product {
   stock: number;
   images: string[];
   category_id: string | null;
+  promotional_price?: number | null;
+  promotion_expires_at?: string | null;
 }
 
 interface ProductFormDialogProps {
@@ -78,6 +80,11 @@ const ProductFormDialog = ({
   const [categoryId, setCategoryId] = useState("");
   const [images, setImages] = useState<string[]>([]);
   const [wantsHighlight, setWantsHighlight] = useState(false);
+  
+  // Promotion state
+  const [hasPromotion, setHasPromotion] = useState(false);
+  const [promotionalPrice, setPromotionalPrice] = useState("");
+  const [promotionExpiresAt, setPromotionExpiresAt] = useState("");
 
   useEffect(() => {
     fetchCategories();
@@ -92,6 +99,16 @@ const ProductFormDialog = ({
       setCategoryId(product.category_id || "");
       setImages(product.images || []);
       setWantsHighlight(false);
+      
+      // Load promotion data
+      const hasActivePromo = product.promotional_price && product.promotion_expires_at;
+      setHasPromotion(!!hasActivePromo);
+      setPromotionalPrice(product.promotional_price?.toString() || "");
+      setPromotionExpiresAt(
+        product.promotion_expires_at 
+          ? new Date(product.promotion_expires_at).toISOString().split('T')[0] 
+          : ""
+      );
     } else {
       resetForm();
     }
@@ -116,6 +133,9 @@ const ProductFormDialog = ({
     setCategoryId("");
     setImages([]);
     setWantsHighlight(false);
+    setHasPromotion(false);
+    setPromotionalPrice("");
+    setPromotionExpiresAt("");
     setErrors({});
   };
 
@@ -142,6 +162,24 @@ const ProductFormDialog = ({
     
     if (!price || parseFloat(price) <= 0) {
       newErrors.price = "Preço é obrigatório";
+    }
+    
+    // Validate promotion
+    if (hasPromotion) {
+      const promoPrice = parseFloat(promotionalPrice);
+      const regularPrice = parseFloat(price);
+      
+      if (!promotionalPrice || promoPrice <= 0) {
+        newErrors.promotionalPrice = "Preço promocional é obrigatório";
+      } else if (promoPrice >= regularPrice) {
+        newErrors.promotionalPrice = "Preço promocional deve ser menor que o preço normal";
+      }
+      
+      if (!promotionExpiresAt) {
+        newErrors.promotionExpiresAt = "Data de término é obrigatória";
+      } else if (new Date(promotionExpiresAt) <= new Date()) {
+        newErrors.promotionExpiresAt = "Data deve ser no futuro";
+      }
     }
     
     setErrors(newErrors);
@@ -246,6 +284,8 @@ const ProductFormDialog = ({
         category_id: categoryId || null,
         images: images,
         seller_id: user.id,
+        promotional_price: hasPromotion ? parseFloat(promotionalPrice) : null,
+        promotion_expires_at: hasPromotion ? new Date(promotionExpiresAt).toISOString() : null,
       };
       
       if (product) {
@@ -438,6 +478,65 @@ const ProductFormDialog = ({
               <p className="text-sm">Nenhuma imagem adicionada</p>
             </div>
           )}
+
+          {/* Promotion Section */}
+          <div className="bg-destructive/10 rounded-xl p-4 border border-destructive/20">
+            <div className="flex items-start gap-3">
+              <Checkbox
+                id="promotion"
+                checked={hasPromotion}
+                onCheckedChange={(checked) => setHasPromotion(checked === true)}
+                className="mt-1"
+              />
+              <div className="flex-1">
+                <Label
+                  htmlFor="promotion"
+                  className="flex items-center gap-2 cursor-pointer font-medium"
+                >
+                  Activar promoção
+                </Label>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Defina um preço promocional temporário com data de expiração.
+                </p>
+              </div>
+            </div>
+            
+            {hasPromotion && (
+              <div className="mt-4 grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="promotionalPrice">Preço promocional (MT) *</Label>
+                  <Input
+                    id="promotionalPrice"
+                    type="number"
+                    value={promotionalPrice}
+                    onChange={(e) => setPromotionalPrice(e.target.value)}
+                    placeholder="0"
+                    min="0"
+                    step="0.01"
+                    className={errors.promotionalPrice ? "border-destructive" : ""}
+                  />
+                  {errors.promotionalPrice && (
+                    <p className="text-sm text-destructive">{errors.promotionalPrice}</p>
+                  )}
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="promotionExpiresAt">Válido até *</Label>
+                  <Input
+                    id="promotionExpiresAt"
+                    type="date"
+                    value={promotionExpiresAt}
+                    onChange={(e) => setPromotionExpiresAt(e.target.value)}
+                    min={new Date().toISOString().split('T')[0]}
+                    className={errors.promotionExpiresAt ? "border-destructive" : ""}
+                  />
+                  {errors.promotionExpiresAt && (
+                    <p className="text-sm text-destructive">{errors.promotionExpiresAt}</p>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
 
           {/* Highlight Option - only show for new products */}
           {!product && (

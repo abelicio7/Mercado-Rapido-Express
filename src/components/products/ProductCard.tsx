@@ -3,6 +3,8 @@ import { MapPin, MessageCircle, ShieldCheck, Sparkles, Store } from "lucide-reac
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import FavoriteButton from "./FavoriteButton";
+import PromotionBadge from "./PromotionBadge";
+import { isPromotionActive } from "@/lib/promotionUtils";
 
 interface ProductCardProps {
   id: string;
@@ -16,6 +18,8 @@ interface ProductCardProps {
   isVerified?: boolean;
   isHighlighted?: boolean;
   sellerId?: string;
+  promotionalPrice?: number | null;
+  promotionExpiresAt?: string | null;
 }
 
 const ProductCard = ({
@@ -30,7 +34,11 @@ const ProductCard = ({
   isVerified = false,
   isHighlighted = false,
   sellerId,
+  promotionalPrice,
+  promotionExpiresAt,
 }: ProductCardProps) => {
+  const hasActivePromotion = isPromotionActive(promotionalPrice, promotionExpiresAt);
+  const displayPrice = hasActivePromotion ? promotionalPrice! : price;
   const formatPrice = (value: number) => {
     return new Intl.NumberFormat("pt-MZ", {
       style: "currency",
@@ -72,15 +80,21 @@ const ProductCard = ({
       } ${isMockProduct ? "cursor-default" : ""}`}
       onClick={isMockProduct ? (e) => e.preventDefault() : undefined}
     >
-      {/* Highlight Badge */}
-      {isHighlighted && (
-        <div className="absolute top-3 left-3 z-10">
+      {/* Highlight & Promotion Badges */}
+      <div className="absolute top-3 left-3 z-10 flex flex-col gap-1">
+        {isHighlighted && (
           <Badge className="bg-highlight text-highlight-foreground gap-1">
             <Sparkles className="h-3 w-3" />
             Destaque
           </Badge>
-        </div>
-      )}
+        )}
+        <PromotionBadge
+          originalPrice={price}
+          promotionalPrice={promotionalPrice}
+          promotionExpiresAt={promotionExpiresAt}
+          size="sm"
+        />
+      </div>
 
       {/* Favorite Button & Stock Badge */}
       <div className="absolute top-3 right-3 z-10 flex items-center gap-2">
@@ -106,9 +120,22 @@ const ProductCard = ({
           <h3 className="font-semibold text-foreground line-clamp-2 group-hover:text-primary transition-colors">
             {name}
           </h3>
-          <p className="text-2xl font-bold text-primary mt-1">
-            {formatPrice(price)}
-          </p>
+          <div className="mt-1">
+            {hasActivePromotion ? (
+              <div className="flex items-baseline gap-2">
+                <p className="text-2xl font-bold text-destructive">
+                  {formatPrice(displayPrice)}
+                </p>
+                <p className="text-sm text-muted-foreground line-through">
+                  {formatPrice(price)}
+                </p>
+              </div>
+            ) : (
+              <p className="text-2xl font-bold text-primary">
+                {formatPrice(price)}
+              </p>
+            )}
+          </div>
         </div>
 
         {/* Store Info */}
