@@ -5,6 +5,8 @@ import { useAuth } from "@/contexts/AuthContext";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import ShareButtons from "@/components/products/ShareButtons";
+import PromotionBadge from "@/components/products/PromotionBadge";
+import { isPromotionActive, formatExpirationDate } from "@/lib/promotionUtils";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
@@ -32,6 +34,8 @@ interface Product {
   created_at: string;
   category_id: string | null;
   seller_id: string;
+  promotional_price: number | null;
+  promotion_expires_at: string | null;
   categories: { name: string; slug: string } | null;
   profiles: {
     user_id: string;
@@ -53,6 +57,8 @@ interface RelatedProduct {
   stock: number;
   images: string[];
   is_highlighted: boolean;
+  promotional_price: number | null;
+  promotion_expires_at: string | null;
   profiles: {
     store_name: string;
     is_verified: boolean;
@@ -134,6 +140,8 @@ const ProductDetails = () => {
           stock,
           images,
           is_highlighted,
+          promotional_price,
+          promotion_expires_at,
           profiles!products_seller_id_fkey (
             store_name,
             is_verified
@@ -167,6 +175,8 @@ const ProductDetails = () => {
           stock,
           images,
           is_highlighted,
+          promotional_price,
+          promotion_expires_at,
           profiles!products_seller_id_fkey (
             store_name,
             is_verified
@@ -319,6 +329,17 @@ const ProductDetails = () => {
                     </Badge>
                   </div>
                 )}
+                
+                {/* Promotion Badge */}
+                {isPromotionActive(product.promotional_price, product.promotion_expires_at) && (
+                  <div className="absolute top-4 right-4 z-10">
+                    <PromotionBadge
+                      originalPrice={product.price}
+                      promotionalPrice={product.promotional_price}
+                      promotionExpiresAt={product.promotion_expires_at}
+                    />
+                  </div>
+                )}
 
                 {product.images && product.images.length > 0 ? (
                   <img
@@ -390,9 +411,25 @@ const ProductDetails = () => {
                 <h1 className="font-display text-3xl md:text-4xl font-bold mb-2">
                   {product.name}
                 </h1>
-                <p className="text-3xl md:text-4xl font-bold text-primary">
-                  {formatPrice(product.price)}
-                </p>
+                {isPromotionActive(product.promotional_price, product.promotion_expires_at) ? (
+                  <div className="space-y-1">
+                    <div className="flex items-baseline gap-3">
+                      <p className="text-3xl md:text-4xl font-bold text-destructive">
+                        {formatPrice(product.promotional_price!)}
+                      </p>
+                      <p className="text-xl text-muted-foreground line-through">
+                        {formatPrice(product.price)}
+                      </p>
+                    </div>
+                    <p className="text-sm text-muted-foreground">
+                      Promoção válida até {formatExpirationDate(product.promotion_expires_at!)}
+                    </p>
+                  </div>
+                ) : (
+                  <p className="text-3xl md:text-4xl font-bold text-primary">
+                    {formatPrice(product.price)}
+                  </p>
+                )}
               </div>
 
               {/* Description */}
@@ -519,9 +556,20 @@ const ProductDetails = () => {
                         <h3 className="font-medium text-sm line-clamp-2 group-hover:text-primary transition-colors">
                           {relatedProduct.name}
                         </h3>
-                        <p className="text-lg font-bold text-primary">
-                          {formatPrice(relatedProduct.price)}
-                        </p>
+                        {isPromotionActive(relatedProduct.promotional_price, relatedProduct.promotion_expires_at) ? (
+                          <div className="flex items-baseline gap-2">
+                            <p className="text-lg font-bold text-destructive">
+                              {formatPrice(relatedProduct.promotional_price!)}
+                            </p>
+                            <p className="text-sm text-muted-foreground line-through">
+                              {formatPrice(relatedProduct.price)}
+                            </p>
+                          </div>
+                        ) : (
+                          <p className="text-lg font-bold text-primary">
+                            {formatPrice(relatedProduct.price)}
+                          </p>
+                        )}
                         {relatedProduct.profiles && (
                           <div className="flex items-center gap-1 text-xs text-muted-foreground">
                             <span className="truncate">{relatedProduct.profiles.store_name}</span>
