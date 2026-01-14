@@ -20,6 +20,7 @@ import {
   ShieldCheck,
   Sparkles,
   SlidersHorizontal,
+  Tag,
 } from "lucide-react";
 
 interface Category {
@@ -79,6 +80,7 @@ const Products = () => {
   const [selectedCategory, setSelectedCategory] = useState(searchParams.get("categoria") || "");
   const [selectedProvince, setSelectedProvince] = useState(searchParams.get("provincia") || "");
   const [selectedCity, setSelectedCity] = useState(searchParams.get("cidade") || "");
+  const [showPromotionsOnly, setShowPromotionsOnly] = useState(searchParams.get("promocao") === "true");
 
   useEffect(() => {
     fetchCategories();
@@ -89,7 +91,7 @@ const Products = () => {
     if (categories.length > 0 || !selectedCategory) {
       fetchProducts();
     }
-  }, [selectedCategory, selectedProvince, selectedCity, categories]);
+  }, [selectedCategory, selectedProvince, selectedCity, showPromotionsOnly, categories]);
 
   const fetchCategories = async () => {
     const { data, error } = await supabase
@@ -161,6 +163,13 @@ const Products = () => {
         );
       }
 
+      // Filter by promotions only
+      if (showPromotionsOnly) {
+        filteredData = filteredData.filter(
+          p => isPromotionActive(p.promotional_price, p.promotion_expires_at)
+        );
+      }
+
       setProducts(filteredData);
     } catch (error) {
       console.error("Error fetching products:", error);
@@ -186,6 +195,7 @@ const Products = () => {
     if (selectedCategory) params.set("categoria", selectedCategory);
     if (selectedProvince) params.set("provincia", selectedProvince);
     if (selectedCity) params.set("cidade", selectedCity);
+    if (showPromotionsOnly) params.set("promocao", "true");
     setSearchParams(params);
   };
 
@@ -194,6 +204,7 @@ const Products = () => {
     setSelectedCategory("");
     setSelectedProvince("");
     setSelectedCity("");
+    setShowPromotionsOnly(false);
     setSearchParams({});
   };
 
@@ -238,7 +249,7 @@ const Products = () => {
     return { label: "Em stock", variant: "default" as const };
   };
 
-  const hasActiveFilters = selectedCategory || selectedProvince || selectedCity || searchQuery;
+  const hasActiveFilters = selectedCategory || selectedProvince || selectedCity || searchQuery || showPromotionsOnly;
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
@@ -341,6 +352,22 @@ const Products = () => {
                     className="w-full h-10 px-3 rounded-lg border border-border bg-background focus:outline-none focus:ring-2 focus:ring-primary"
                   />
                 </div>
+
+                {/* Promotions Filter */}
+                <div className="sm:col-span-3 flex items-center pt-2">
+                  <button
+                    type="button"
+                    onClick={() => setShowPromotionsOnly(!showPromotionsOnly)}
+                    className={`flex items-center gap-2 px-4 py-2 rounded-lg border transition-colors ${
+                      showPromotionsOnly
+                        ? "bg-destructive text-destructive-foreground border-destructive"
+                        : "bg-background border-border hover:border-destructive/50 hover:bg-destructive/5"
+                    }`}
+                  >
+                    <Tag className="h-4 w-4" />
+                    <span className="font-medium">Apenas promoções</span>
+                  </button>
+                </div>
               </div>
 
               {hasActiveFilters && (
@@ -366,6 +393,15 @@ const Products = () => {
                     <Badge variant="secondary" className="gap-1">
                       {selectedCity}
                       <button onClick={() => setSelectedCity("")}>
+                        <X className="h-3 w-3" />
+                      </button>
+                    </Badge>
+                  )}
+                  {showPromotionsOnly && (
+                    <Badge variant="secondary" className="gap-1 bg-destructive/10 text-destructive border-destructive/20">
+                      <Tag className="h-3 w-3" />
+                      Promoções
+                      <button onClick={() => setShowPromotionsOnly(false)}>
                         <X className="h-3 w-3" />
                       </button>
                     </Badge>
