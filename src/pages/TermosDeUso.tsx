@@ -133,7 +133,7 @@ const TermosDeUso = () => {
             <section className="space-y-4">
               <h2 className="font-display text-xl font-semibold">12. Contacto</h2>
               <p className="text-muted-foreground leading-relaxed">
-                Para questões sobre estes Termos de Uso, entre em contacto connosco através do email suporte@mercadorapido.co.mz ou pelo WhatsApp.
+                Para questões sobre estes Termos de Uso, entre em contacto connosco através do email suporte@mercadorapidoexpress.com ou pelo WhatsApp (+258 87 993 1016).
               </p>
             </section>
           </div>

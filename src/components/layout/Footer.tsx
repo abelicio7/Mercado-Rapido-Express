@@ -62,25 +62,25 @@ const Footer = () => {
             <h4 className="font-display font-semibold">Contacto</h4>
             <div className="flex flex-col gap-3">
               <a 
-                href="https://wa.me/258840000000" 
+                href="https://wa.me/258879931016" 
                 className="flex items-center gap-2 text-sm text-primary-foreground/70 hover:text-primary-foreground transition-colors"
               >
                 <MessageCircle className="h-4 w-4" />
                 <span>WhatsApp</span>
               </a>
               <a 
-                href="mailto:suporte@mercadorapido.co.mz" 
+                href="mailto:suporte@mercadorapidoexpress.com" 
                 className="flex items-center gap-2 text-sm text-primary-foreground/70 hover:text-primary-foreground transition-colors"
               >
                 <Mail className="h-4 w-4" />
-                <span>suporte@mercadorapido.co.mz</span>
+                <span>suporte@mercadorapidoexpress.com</span>
               </a>
               <a 
-                href="tel:+258840000000" 
+                href="tel:+258879931016" 
                 className="flex items-center gap-2 text-sm text-primary-foreground/70 hover:text-primary-foreground transition-colors"
               >
                 <Phone className="h-4 w-4" />
-                <span>+258 84 000 0000</span>
+                <span>+258 87 993 1016</span>
               </a>
             </div>
           </div>
