@@ -134,7 +134,7 @@ const Privacidade = () => {
                 <li><strong>Oposição:</strong> Opor-se ao processamento dos seus dados para fins de marketing</li>
               </ul>
               <p className="text-muted-foreground leading-relaxed mt-4">
-                Para exercer estes direitos, contacte-nos através do email suporte@mercadorapido.co.mz.
+                Para exercer estes direitos, contacte-nos através do email suporte@mercadorapidoexpress.com.
               </p>
             </section>
 
@@ -165,8 +165,8 @@ const Privacidade = () => {
                 Para questões sobre esta Política de Privacidade ou sobre os seus dados pessoais, contacte-nos:
               </p>
               <ul className="list-none text-muted-foreground space-y-2 mt-4">
-                <li><strong>Email:</strong> suporte@mercadorapido.co.mz</li>
-                <li><strong>WhatsApp:</strong> +258 84 000 0000</li>
+                <li><strong>Email:</strong> suporte@mercadorapidoexpress.com</li>
+                <li><strong>WhatsApp:</strong> +258 87 993 1016</li>
               </ul>
             </section>
           </div>
