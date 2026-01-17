@@ -32,12 +32,12 @@ const Header = () => {
           <Link to="/lojas" className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors">
             Lojas
           </Link>
-          <Link to="/categorias" className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors">
+          <a href="/#categorias" className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors">
             Categorias
-          </Link>
-          <Link to="/como-funciona" className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors">
+          </a>
+          <a href="/#como-funciona" className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors">
             Como Funciona
-          </Link>
+          </a>
         </nav>
 
         {/* Desktop Actions */}
@@ -123,20 +123,20 @@ const Header = () => {
               <Store className="h-5 w-5 text-muted-foreground" />
               <span>Lojas</span>
             </Link>
-            <Link 
-              to="/categorias" 
+            <a 
+              href="/#categorias" 
               className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-accent transition-colors"
               onClick={() => setIsMenuOpen(false)}
             >
               <span>Categorias</span>
-            </Link>
-            <Link 
-              to="/como-funciona" 
+            </a>
+            <a 
+              href="/#como-funciona" 
               className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-accent transition-colors"
               onClick={() => setIsMenuOpen(false)}
             >
               <span>Como Funciona</span>
-            </Link>
+            </a>
             
             <div className="border-t border-border pt-3 mt-2 flex flex-col gap-2">
               {user ? (
