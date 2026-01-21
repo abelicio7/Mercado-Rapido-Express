@@ -1,5 +1,5 @@
 export const PLAN_PRODUCT_LIMITS = {
-  trial: 5,
+  trial: 7,
   free: 5,
   basico: 15,
   pro: 30,
