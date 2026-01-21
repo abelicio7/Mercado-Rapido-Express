@@ -164,10 +164,9 @@ const Privacidade = () => {
               <p className="text-muted-foreground leading-relaxed">
                 Para questões sobre esta Política de Privacidade ou sobre os seus dados pessoais, contacte-nos:
               </p>
-              <ul className="list-none text-muted-foreground space-y-2 mt-4">
-                <li><strong>Email:</strong> suporte@mercadorapidoexpress.com</li>
-                <li><strong>WhatsApp:</strong> +258 87 993 1016</li>
-              </ul>
+              <p className="text-muted-foreground mt-4">
+                <strong>Email:</strong> suporte@mercadorapidoexpress.com
+              </p>
             </section>
           </div>
         </div>
