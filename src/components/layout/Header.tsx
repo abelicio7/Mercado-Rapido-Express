@@ -1,14 +1,38 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { Menu, X, Search, MapPin, User, Store, LogOut, Heart } from "lucide-react";
+import { Menu, X, Search, MapPin, User, Store, LogOut, Heart, Shield } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
 import logo from "@/assets/logo.jpg";
 
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
   const { user, profile, signOut } = useAuth();
   const navigate = useNavigate();
+
+  useEffect(() => {
+    if (user) {
+      checkAdminRole();
+    } else {
+      setIsAdmin(false);
+    }
+  }, [user]);
+
+  const checkAdminRole = async () => {
+    try {
+      const { data, error } = await supabase.rpc("has_role", {
+        _user_id: user!.id,
+        _role: "admin",
+      });
+      if (!error && data) {
+        setIsAdmin(true);
+      }
+    } catch (error) {
+      console.error("Error checking admin role:", error);
+    }
+  };
 
   const handleSignOut = async () => {
     await signOut();
@@ -38,6 +62,12 @@ const Header = () => {
           <a href="/#como-funciona" className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors">
             Como Funciona
           </a>
+          {isAdmin && (
+            <Link to="/admin" className="text-sm font-medium text-primary hover:text-primary/80 transition-colors flex items-center gap-1">
+              <Shield className="h-4 w-4" />
+              Admin
+            </Link>
+          )}
         </nav>
 
         {/* Desktop Actions */}
@@ -137,6 +167,16 @@ const Header = () => {
             >
               <span>Como Funciona</span>
             </a>
+            {isAdmin && (
+              <Link 
+                to="/admin" 
+                className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-accent transition-colors text-primary"
+                onClick={() => setIsMenuOpen(false)}
+              >
+                <Shield className="h-5 w-5" />
+                <span>Painel Admin</span>
+              </Link>
+            )}
             
             <div className="border-t border-border pt-3 mt-2 flex flex-col gap-2">
               {user ? (
