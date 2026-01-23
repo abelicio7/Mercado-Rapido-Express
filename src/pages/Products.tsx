@@ -6,6 +6,7 @@ import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import PromotionBadge from "@/components/products/PromotionBadge";
 import { isPromotionActive } from "@/lib/promotionUtils";
+import { buildWhatsAppUrl, openExternalUrl } from "@/lib/whatsapp";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
@@ -218,21 +219,29 @@ const Products = () => {
       return;
     }
 
-    // Track the click
-    try {
-      await supabase.from("interest_clicks").insert({
-        product_id: product.id,
-        user_id: user.id,
-      });
-    } catch (error) {
-      console.error("Error tracking click:", error);
-    }
-
-    // Open WhatsApp
-    const message = encodeURIComponent(
+    const url = buildWhatsAppUrl(
+      product.profiles?.whatsapp,
       `Olá, vi o produto "${product.name}" no Mercado Rápido Express e gostaria de saber mais.`
     );
-    window.open(`https://wa.me/${product.profiles?.whatsapp}?text=${message}`, "_blank");
+
+    if (!url) {
+      toast({
+        variant: "destructive",
+        title: "WhatsApp indisponível",
+        description: "Esta loja não tem um número de WhatsApp configurado.",
+      });
+      return;
+    }
+
+    // Track the click (don't await; avoids mobile popup blockers)
+    void supabase
+      .from("interest_clicks")
+      .insert({ product_id: product.id, user_id: user.id })
+      .then(({ error }) => {
+        if (error) console.error("Error tracking click:", error);
+      });
+
+    openExternalUrl(url);
   };
 
   const formatPrice = (value: number) => {
