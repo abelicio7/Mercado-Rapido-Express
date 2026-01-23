@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import FavoriteButton from "./FavoriteButton";
 import PromotionBadge from "./PromotionBadge";
 import { isPromotionActive } from "@/lib/promotionUtils";
+import { buildWhatsAppUrl, openExternalUrl } from "@/lib/whatsapp";
 
 interface ProductCardProps {
   id: string;
@@ -55,24 +56,17 @@ const ProductCard = ({
 
   const stockStatus = getStockStatus();
 
-  const formatWhatsAppNumber = (phone: string): string => {
-    // Remove all non-digit characters
-    let cleaned = phone.replace(/\D/g, "");
-    // If it doesn't start with 258, add it
-    if (!cleaned.startsWith("258")) {
-      cleaned = "258" + cleaned;
-    }
-    return cleaned;
-  };
-
   const handleInterestClick = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    const whatsappNumber = formatWhatsAppNumber(storeWhatsApp);
-    const message = encodeURIComponent(
+
+    const url = buildWhatsAppUrl(
+      storeWhatsApp,
       `Olá, vi o produto "${name}" no Mercado Rápido Express e gostaria de saber mais.`
     );
-    window.open(`https://wa.me/${whatsappNumber}?text=${message}`, "_blank");
+    if (!url) return;
+
+    openExternalUrl(url);
   };
 
   const handleStoreClick = (e: React.MouseEvent) => {
