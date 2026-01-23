@@ -206,6 +206,17 @@ const ProductDetails = () => {
     }
   };
 
+  const formatWhatsAppNumber = (phone: string | undefined): string => {
+    if (!phone) return "";
+    // Remove all non-digit characters
+    let cleaned = phone.replace(/\D/g, "");
+    // If it doesn't start with 258, add it
+    if (!cleaned.startsWith("258")) {
+      cleaned = "258" + cleaned;
+    }
+    return cleaned;
+  };
+
   const handleInterestClick = async () => {
     if (!product) return;
 
@@ -228,11 +239,12 @@ const ProductDetails = () => {
       console.error("Error tracking click:", error);
     }
 
-    // Open WhatsApp
+    // Open WhatsApp with formatted number
+    const whatsappNumber = formatWhatsAppNumber(product.profiles?.whatsapp);
     const message = encodeURIComponent(
       `Olá, vi o produto "${product.name}" no Mercado Rápido Express e gostaria de saber mais.`
     );
-    window.open(`https://wa.me/${product.profiles?.whatsapp}?text=${message}`, "_blank");
+    window.open(`https://wa.me/${whatsappNumber}?text=${message}`, "_blank");
   };
 
   const formatPrice = (value: number) => {
