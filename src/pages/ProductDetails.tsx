@@ -220,16 +220,23 @@ const ProductDetails = () => {
   const handleInterestClick = async () => {
     if (!product) return;
 
-    // Track the click if user is logged in (optional tracking)
-    if (user) {
-      try {
-        await supabase.from("interest_clicks").insert({
-          product_id: product.id,
-          user_id: user.id,
-        });
-      } catch (error) {
-        console.error("Error tracking click:", error);
-      }
+    if (!user) {
+      toast({
+        title: "Faça login primeiro",
+        description: "Precisa estar logado para contactar a loja.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Track the click
+    try {
+      await supabase.from("interest_clicks").insert({
+        product_id: product.id,
+        user_id: user.id,
+      });
+    } catch (error) {
+      console.error("Error tracking click:", error);
     }
 
     // Open WhatsApp with formatted number
