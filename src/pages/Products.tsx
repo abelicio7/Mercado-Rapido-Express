@@ -458,23 +458,23 @@ const Products = () => {
                 )}
               </div>
             ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+              <div className="grid grid-cols-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-2 sm:gap-6">
                 {products.map((product) => {
                   const stockStatus = getStockStatus(product.stock);
 
                   return (
                     <div
                       key={product.id}
-                      className={`group relative bg-card rounded-2xl overflow-hidden shadow-card hover:shadow-soft transition-all duration-300 ${
-                        product.is_highlighted ? "ring-2 ring-highlight shadow-highlight" : ""
+                      className={`group relative bg-card rounded-lg sm:rounded-2xl overflow-hidden shadow-card hover:shadow-soft transition-all duration-300 ${
+                        product.is_highlighted ? "ring-1 sm:ring-2 ring-highlight shadow-highlight" : ""
                       }`}
                     >
                       {/* Highlight & Promotion Badges */}
-                      <div className="absolute top-3 left-3 z-10 flex flex-col gap-1">
+                      <div className="absolute top-1 sm:top-3 left-1 sm:left-3 z-10 flex flex-col gap-0.5 sm:gap-1">
                         {product.is_highlighted && (
-                          <Badge className="bg-highlight text-highlight-foreground gap-1">
-                            <Sparkles className="h-3 w-3" />
-                            Destaque
+                          <Badge className="bg-highlight text-highlight-foreground gap-0.5 sm:gap-1 text-[8px] sm:text-xs px-1 sm:px-2 py-0 sm:py-0.5">
+                            <Sparkles className="h-2 w-2 sm:h-3 sm:w-3" />
+                            <span className="hidden sm:inline">Destaque</span>
                           </Badge>
                         )}
                         <PromotionBadge
@@ -486,9 +486,10 @@ const Products = () => {
                       </div>
 
                       {/* Stock Badge */}
-                      <div className="absolute top-3 right-3 z-10">
-                        <Badge variant={stockStatus.variant} className="text-xs">
-                          {stockStatus.label}
+                      <div className="absolute top-1 sm:top-3 right-1 sm:right-3 z-10">
+                        <Badge variant={stockStatus.variant} className="text-[8px] sm:text-xs px-1 sm:px-2 py-0 sm:py-0.5">
+                          <span className="sm:hidden">{product.stock > 0 ? product.stock : "0"}</span>
+                          <span className="hidden sm:inline">{stockStatus.label}</span>
                         </Badge>
                       </div>
 
@@ -502,31 +503,31 @@ const Products = () => {
                           />
                         ) : (
                           <div className="w-full h-full flex items-center justify-center">
-                            <Package className="h-12 w-12 text-muted-foreground" />
+                            <Package className="h-6 w-6 sm:h-12 sm:w-12 text-muted-foreground" />
                           </div>
                         )}
                       </Link>
 
                       {/* Content */}
-                      <div className="p-4 space-y-3">
+                      <div className="p-1.5 sm:p-4 space-y-1 sm:space-y-3">
                         {/* Product Info */}
                         <div>
                           <Link to={`/produtos/${product.id}`}>
-                            <h3 className="font-semibold text-foreground line-clamp-2 group-hover:text-primary transition-colors">
+                            <h3 className="font-semibold text-foreground line-clamp-1 sm:line-clamp-2 group-hover:text-primary transition-colors text-[10px] sm:text-base">
                               {product.name}
                             </h3>
                           </Link>
                           {isPromotionActive(product.promotional_price, product.promotion_expires_at) ? (
-                            <div className="flex items-baseline gap-2 mt-1">
-                              <p className="text-2xl font-bold text-destructive">
+                            <div className="flex items-baseline gap-1 sm:gap-2 mt-0.5 sm:mt-1 flex-wrap">
+                              <p className="text-xs sm:text-2xl font-bold text-destructive">
                                 {formatPrice(product.promotional_price!)}
                               </p>
-                              <p className="text-sm text-muted-foreground line-through">
+                              <p className="text-[8px] sm:text-sm text-muted-foreground line-through hidden sm:block">
                                 {formatPrice(product.price)}
                               </p>
                             </div>
                           ) : (
-                            <p className="text-2xl font-bold text-primary mt-1">
+                            <p className="text-xs sm:text-2xl font-bold text-primary mt-0.5 sm:mt-1">
                               {formatPrice(product.price)}
                             </p>
                           )}
@@ -534,17 +535,17 @@ const Products = () => {
 
                         {/* Store Info */}
                         {product.profiles && (
-                          <div className="flex items-start gap-2 pt-2 border-t border-border">
+                          <div className="flex items-start gap-1 sm:gap-2 pt-1 sm:pt-2 border-t border-border">
                             <div className="flex-1 min-w-0">
-                              <div className="flex items-center gap-1">
-                                <span className="text-sm font-medium truncate">
+                              <div className="flex items-center gap-0.5 sm:gap-1">
+                                <span className="text-[8px] sm:text-sm font-medium truncate">
                                   {product.profiles.store_name}
                                 </span>
                                 {product.profiles.is_verified && (
-                                  <ShieldCheck className="h-4 w-4 text-success flex-shrink-0" />
+                                  <ShieldCheck className="h-2 w-2 sm:h-4 sm:w-4 text-success flex-shrink-0" />
                                 )}
                               </div>
-                              <div className="flex items-center gap-1 text-xs text-muted-foreground mt-0.5">
+                              <div className="hidden sm:flex items-center gap-1 text-xs text-muted-foreground mt-0.5">
                                 <MapPin className="h-3 w-3" />
                                 <span className="truncate">
                                   {product.profiles.city}, {product.profiles.province}
@@ -558,10 +559,11 @@ const Products = () => {
                         <Button
                           onClick={() => handleInterestClick(product)}
                           disabled={product.stock === 0}
-                          className="w-full gap-2 bg-whatsapp hover:bg-whatsapp/90 text-whatsapp-foreground"
+                          className="w-full gap-1 sm:gap-2 bg-whatsapp hover:bg-whatsapp/90 text-whatsapp-foreground text-[9px] sm:text-sm h-6 sm:h-10 px-1 sm:px-4"
                         >
-                          <MessageCircle className="h-4 w-4" />
-                          Tenho Interesse
+                          <MessageCircle className="h-3 w-3 sm:h-4 sm:w-4" />
+                          <span className="hidden sm:inline">Tenho Interesse</span>
+                          <span className="sm:hidden">WhatsApp</span>
                         </Button>
                       </div>
                     </div>
