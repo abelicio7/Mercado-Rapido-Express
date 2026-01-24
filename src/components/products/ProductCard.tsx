@@ -1,4 +1,4 @@
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { MapPin, MessageCircle, ShieldCheck, Sparkles, Store } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -6,6 +6,8 @@ import FavoriteButton from "./FavoriteButton";
 import PromotionBadge from "./PromotionBadge";
 import { isPromotionActive } from "@/lib/promotionUtils";
 import { buildWhatsAppUrl, openExternalUrl } from "@/lib/whatsapp";
+import { useAuth } from "@/contexts/AuthContext";
+import { useToast } from "@/hooks/use-toast";
 
 interface ProductCardProps {
   id: string;
@@ -38,6 +40,9 @@ const ProductCard = ({
   promotionalPrice,
   promotionExpiresAt,
 }: ProductCardProps) => {
+  const { user } = useAuth();
+  const { toast } = useToast();
+  const navigate = useNavigate();
   const hasActivePromotion = isPromotionActive(promotionalPrice, promotionExpiresAt);
   const displayPrice = hasActivePromotion ? promotionalPrice! : price;
   const formatPrice = (value: number) => {
@@ -60,11 +65,28 @@ const ProductCard = ({
     e.preventDefault();
     e.stopPropagation();
 
+    if (!user) {
+      toast({
+        title: "Faça login primeiro",
+        description: "Precisa estar logado para contactar a loja.",
+        variant: "destructive",
+      });
+      navigate("/auth");
+      return;
+    }
+
     const url = buildWhatsAppUrl(
       storeWhatsApp,
       `Olá, vi o produto "${name}" no Mercado Rápido Express e gostaria de saber mais.`
     );
-    if (!url) return;
+    if (!url) {
+      toast({
+        variant: "destructive",
+        title: "WhatsApp indisponível",
+        description: "A loja não tem um número de WhatsApp configurado.",
+      });
+      return;
+    }
 
     openExternalUrl(url);
   };
