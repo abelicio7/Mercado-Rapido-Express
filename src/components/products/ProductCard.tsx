@@ -166,30 +166,30 @@ const ProductCard = ({
           </div>
         </div>
 
-        {/* Store Info - Hidden on mobile */}
-        <div className="hidden sm:flex items-start gap-2 pt-2 border-t border-border">
+        {/* Store Info */}
+        <div className="flex items-start gap-1 sm:gap-2 pt-1 sm:pt-2 border-t border-border">
           <div className="flex-1 min-w-0">
             {sellerId && !isMockProduct ? (
               <Link
                 to={`/loja/${sellerId}`}
                 onClick={handleStoreClick}
-                className="flex items-center gap-1 hover:text-primary transition-colors"
+                className="flex items-center gap-0.5 sm:gap-1 hover:text-primary transition-colors"
               >
-                <Store className="h-3 w-3 flex-shrink-0" />
-                <span className="text-sm font-medium truncate">{storeName}</span>
+                <Store className="h-2 w-2 sm:h-3 sm:w-3 flex-shrink-0" />
+                <span className="text-[8px] sm:text-sm font-medium truncate">{storeName}</span>
                 {isVerified && (
-                  <ShieldCheck className="h-4 w-4 text-success flex-shrink-0" />
+                  <ShieldCheck className="h-2 w-2 sm:h-4 sm:w-4 text-success flex-shrink-0" />
                 )}
               </Link>
             ) : (
-              <div className="flex items-center gap-1">
-                <span className="text-sm font-medium truncate">{storeName}</span>
+              <div className="flex items-center gap-0.5 sm:gap-1">
+                <span className="text-[8px] sm:text-sm font-medium truncate">{storeName}</span>
                 {isVerified && (
-                  <ShieldCheck className="h-4 w-4 text-success flex-shrink-0" />
+                  <ShieldCheck className="h-2 w-2 sm:h-4 sm:w-4 text-success flex-shrink-0" />
                 )}
               </div>
             )}
-            <div className="flex items-center gap-1 text-xs text-muted-foreground mt-0.5">
+            <div className="hidden sm:flex items-center gap-1 text-xs text-muted-foreground mt-0.5">
               <MapPin className="h-3 w-3" />
               <span className="truncate">{storeLocation}</span>
             </div>
