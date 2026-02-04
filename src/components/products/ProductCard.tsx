@@ -102,16 +102,16 @@ const ProductCard = ({
   return (
     <Link
       to={isMockProduct ? "#" : `/produtos/${id}`}
-      className={`group relative bg-card rounded-lg sm:rounded-2xl overflow-hidden shadow-card hover:shadow-soft transition-all duration-300 block ${
+      className={`group relative bg-card rounded-md sm:rounded-2xl overflow-hidden shadow-card hover:shadow-soft transition-all duration-300 block ${
         isHighlighted ? "ring-1 sm:ring-2 ring-highlight shadow-highlight" : ""
       } ${isMockProduct ? "cursor-default" : ""}`}
       onClick={isMockProduct ? (e) => e.preventDefault() : undefined}
     >
       {/* Highlight & Promotion Badges */}
-      <div className="absolute top-0.5 sm:top-3 left-0.5 sm:left-3 z-10 flex flex-col gap-0.5 sm:gap-1">
+      <div className="absolute top-1 sm:top-3 left-1 sm:left-3 z-10 flex flex-col gap-0.5 sm:gap-1">
         {isHighlighted && (
-          <Badge className="bg-highlight text-highlight-foreground gap-0.5 sm:gap-1 text-[6px] sm:text-xs px-0.5 sm:px-2 py-0 sm:py-0.5">
-            <Sparkles className="h-1.5 w-1.5 sm:h-3 sm:w-3" />
+          <Badge className="bg-highlight text-highlight-foreground gap-0.5 sm:gap-1 text-[7px] sm:text-xs px-1 sm:px-2 py-0 sm:py-0.5">
+            <Sparkles className="h-2 w-2 sm:h-3 sm:w-3" />
             <span className="hidden sm:inline">Destaque</span>
           </Badge>
         )}
@@ -124,9 +124,9 @@ const ProductCard = ({
       </div>
 
       {/* Favorite Button & Stock Badge */}
-      <div className="absolute top-0.5 sm:top-3 right-0.5 sm:right-3 z-10 flex items-center gap-0.5 sm:gap-2">
+      <div className="absolute top-1 sm:top-3 right-1 sm:right-3 z-10 flex items-center gap-0.5 sm:gap-2">
         {!isMockProduct && <FavoriteButton productId={id} size="sm" />}
-        <Badge variant={stockStatus.variant} className="text-[6px] sm:text-xs px-0.5 sm:px-2 py-0 sm:py-0.5">
+        <Badge variant={stockStatus.variant} className="text-[7px] sm:text-xs px-1 sm:px-2 py-0 sm:py-0.5">
           <span className="sm:hidden">{stock > 0 ? stock : "0"}</span>
           <span className="hidden sm:inline">{stockStatus.label}</span>
         </Badge>
@@ -142,24 +142,24 @@ const ProductCard = ({
       </div>
 
       {/* Content */}
-      <div className="p-1 sm:p-4 space-y-0.5 sm:space-y-3">
+      <div className="p-1.5 sm:p-4 space-y-1 sm:space-y-3">
         {/* Product Info */}
         <div>
-          <h3 className="font-semibold text-foreground line-clamp-1 sm:line-clamp-2 group-hover:text-primary transition-colors text-[8px] sm:text-base leading-tight">
+          <h3 className="font-semibold text-foreground line-clamp-2 group-hover:text-primary transition-colors text-[9px] sm:text-base leading-tight">
             {name}
           </h3>
           <div className="mt-0.5 sm:mt-1">
             {hasActivePromotion ? (
-              <div className="flex items-baseline gap-0.5 sm:gap-2 flex-wrap">
-                <p className="text-[9px] sm:text-2xl font-bold text-destructive">
+              <div className="flex items-baseline gap-1 sm:gap-2 flex-wrap">
+                <p className="text-[10px] sm:text-2xl font-bold text-destructive">
                   {formatPrice(displayPrice)}
                 </p>
-                <p className="text-[6px] sm:text-sm text-muted-foreground line-through hidden sm:block">
+                <p className="text-[7px] sm:text-sm text-muted-foreground line-through hidden sm:block">
                   {formatPrice(price)}
                 </p>
               </div>
             ) : (
-              <p className="text-[9px] sm:text-2xl font-bold text-primary">
+              <p className="text-[10px] sm:text-2xl font-bold text-primary">
                 {formatPrice(price)}
               </p>
             )}
@@ -167,7 +167,7 @@ const ProductCard = ({
         </div>
 
         {/* Store Info */}
-        <div className="flex items-start gap-0.5 sm:gap-2 pt-0.5 sm:pt-2 border-t border-border">
+        <div className="flex items-start gap-1 sm:gap-2 pt-1 sm:pt-2 border-t border-border">
           <div className="flex-1 min-w-0">
             {sellerId && !isMockProduct ? (
               <Link
@@ -175,17 +175,18 @@ const ProductCard = ({
                 onClick={handleStoreClick}
                 className="flex items-center gap-0.5 sm:gap-1 hover:text-primary transition-colors"
               >
-                <Store className="h-1.5 w-1.5 sm:h-3 sm:w-3 flex-shrink-0" />
-                <span className="text-[6px] sm:text-sm font-medium truncate">{storeName}</span>
+                <Store className="h-2 w-2 sm:h-3 sm:w-3 flex-shrink-0" />
+                <span className="text-[7px] sm:text-sm font-medium truncate">{storeName}</span>
                 {isVerified && (
-                  <ShieldCheck className="h-1.5 w-1.5 sm:h-4 sm:w-4 text-success flex-shrink-0" />
+                  <ShieldCheck className="h-2 w-2 sm:h-4 sm:w-4 text-success flex-shrink-0" />
                 )}
               </Link>
             ) : (
               <div className="flex items-center gap-0.5 sm:gap-1">
-                <span className="text-[6px] sm:text-sm font-medium truncate">{storeName}</span>
+                <Store className="h-2 w-2 sm:h-3 sm:w-3 flex-shrink-0" />
+                <span className="text-[7px] sm:text-sm font-medium truncate">{storeName}</span>
                 {isVerified && (
-                  <ShieldCheck className="h-1.5 w-1.5 sm:h-4 sm:w-4 text-success flex-shrink-0" />
+                  <ShieldCheck className="h-2 w-2 sm:h-4 sm:w-4 text-success flex-shrink-0" />
                 )}
               </div>
             )}
@@ -200,9 +201,9 @@ const ProductCard = ({
         <Button
           onClick={handleInterestClick}
           disabled={stock === 0}
-          className="w-full gap-0.5 sm:gap-2 bg-whatsapp hover:bg-whatsapp/90 text-whatsapp-foreground text-[7px] sm:text-sm h-5 sm:h-10 px-0.5 sm:px-4"
+          className="w-full gap-1 sm:gap-2 bg-whatsapp hover:bg-whatsapp/90 text-whatsapp-foreground text-[8px] sm:text-sm h-6 sm:h-10 px-1 sm:px-4"
         >
-          <MessageCircle className="h-2 w-2 sm:h-4 sm:w-4" />
+          <MessageCircle className="h-2.5 w-2.5 sm:h-4 sm:w-4" />
           <span className="hidden sm:inline">Tenho Interesse</span>
           <span className="sm:hidden">WhatsApp</span>
         </Button>
