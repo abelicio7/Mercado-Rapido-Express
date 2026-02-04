@@ -1,25 +1,18 @@
 import { useState, useEffect } from "react";
-import { useSearchParams, Link } from "react-router-dom";
+import { useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/contexts/AuthContext";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
-import PromotionBadge from "@/components/products/PromotionBadge";
+import ProductCard from "@/components/products/ProductCard";
 import { isPromotionActive } from "@/lib/promotionUtils";
-import { buildWhatsAppUrl, openExternalUrl } from "@/lib/whatsapp";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import {
   Search,
-  MapPin,
-  Filter,
   X,
   Loader2,
   Package,
-  MessageCircle,
-  ShieldCheck,
-  Sparkles,
   SlidersHorizontal,
   Tag,
 } from "lucide-react";
@@ -49,6 +42,7 @@ interface Product {
     city: string;
     whatsapp: string;
     is_verified: boolean;
+    user_id: string;
   } | null;
 }
 
@@ -68,7 +62,6 @@ const provinces = [
 
 const Products = () => {
   const [searchParams, setSearchParams] = useSearchParams();
-  const { user } = useAuth();
   const { toast } = useToast();
 
   const [products, setProducts] = useState<Product[]>([]);
@@ -120,7 +113,8 @@ const Products = () => {
             province,
             city,
             whatsapp,
-            is_verified
+            is_verified,
+            user_id
           )
         `)
         .eq("is_active", true)
@@ -209,53 +203,12 @@ const Products = () => {
     setSearchParams({});
   };
 
-  const handleInterestClick = async (product: Product) => {
-    if (!user) {
-      toast({
-        title: "Faça login primeiro",
-        description: "Precisa estar logado para contactar a loja.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    const url = buildWhatsAppUrl(
-      product.profiles?.whatsapp,
-      `Olá, vi o produto "${product.name}" no Mercado Rápido Express e gostaria de saber mais.`
-    );
-
-    if (!url) {
-      toast({
-        variant: "destructive",
-        title: "WhatsApp indisponível",
-        description: "Esta loja não tem um número de WhatsApp configurado.",
-      });
-      return;
-    }
-
-    // Track the click (don't await; avoids mobile popup blockers)
-    void supabase
-      .from("interest_clicks")
-      .insert({ product_id: product.id, user_id: user.id })
-      .then(({ error }) => {
-        if (error) console.error("Error tracking click:", error);
-      });
-
-    openExternalUrl(url);
-  };
-
   const formatPrice = (value: number) => {
     return new Intl.NumberFormat("pt-MZ", {
       style: "currency",
       currency: "MZN",
       minimumFractionDigits: 0,
     }).format(value);
-  };
-
-  const getStockStatus = (stock: number) => {
-    if (stock === 0) return { label: "Esgotado", variant: "destructive" as const };
-    if (stock <= 3) return { label: `Últimos ${stock}`, variant: "secondary" as const };
-    return { label: "Em stock", variant: "default" as const };
   };
 
   const hasActiveFilters = selectedCategory || selectedProvince || selectedCity || searchQuery || showPromotionsOnly;
@@ -458,115 +411,25 @@ const Products = () => {
                 )}
               </div>
             ) : (
-              <div className="grid grid-cols-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-2 sm:gap-6">
-                {products.map((product) => {
-                  const stockStatus = getStockStatus(product.stock);
-
-                  return (
-                    <div
-                      key={product.id}
-                      className={`group relative bg-card rounded-2xl overflow-hidden shadow-card hover:shadow-soft transition-all duration-300 ${
-                        product.is_highlighted ? "ring-2 ring-highlight shadow-highlight" : ""
-                      }`}
-                    >
-                      {/* Highlight & Promotion Badges */}
-                      <div className="absolute top-3 left-3 z-10 flex flex-col gap-1">
-                        {product.is_highlighted && (
-                          <Badge className="bg-highlight text-highlight-foreground gap-1">
-                            <Sparkles className="h-3 w-3" />
-                            Destaque
-                          </Badge>
-                        )}
-                        <PromotionBadge
-                          originalPrice={product.price}
-                          promotionalPrice={product.promotional_price}
-                          promotionExpiresAt={product.promotion_expires_at}
-                          size="sm"
-                        />
-                      </div>
-
-                      {/* Stock Badge */}
-                      <div className="absolute top-3 right-3 z-10">
-                        <Badge variant={stockStatus.variant} className="text-xs">
-                          {stockStatus.label}
-                        </Badge>
-                      </div>
-
-                      {/* Image */}
-                      <Link to={`/produtos/${product.id}`} className="block aspect-square overflow-hidden bg-muted">
-                        {product.images && product.images.length > 0 ? (
-                          <img
-                            src={product.images[0]}
-                            alt={product.name}
-                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                          />
-                        ) : (
-                          <div className="w-full h-full flex items-center justify-center">
-                            <Package className="h-12 w-12 text-muted-foreground" />
-                          </div>
-                        )}
-                      </Link>
-
-                      {/* Content */}
-                      <div className="p-4 space-y-3">
-                        {/* Product Info */}
-                        <div>
-                          <Link to={`/produtos/${product.id}`}>
-                            <h3 className="font-semibold text-foreground line-clamp-2 group-hover:text-primary transition-colors">
-                              {product.name}
-                            </h3>
-                          </Link>
-                          {isPromotionActive(product.promotional_price, product.promotion_expires_at) ? (
-                            <div className="flex items-baseline gap-2 mt-1">
-                              <p className="text-2xl font-bold text-destructive">
-                                {formatPrice(product.promotional_price!)}
-                              </p>
-                              <p className="text-sm text-muted-foreground line-through">
-                                {formatPrice(product.price)}
-                              </p>
-                            </div>
-                          ) : (
-                            <p className="text-2xl font-bold text-primary mt-1">
-                              {formatPrice(product.price)}
-                            </p>
-                          )}
-                        </div>
-
-                        {/* Store Info */}
-                        {product.profiles && (
-                          <div className="flex items-start gap-2 pt-2 border-t border-border">
-                            <div className="flex-1 min-w-0">
-                              <div className="flex items-center gap-1">
-                                <span className="text-sm font-medium truncate">
-                                  {product.profiles.store_name}
-                                </span>
-                                {product.profiles.is_verified && (
-                                  <ShieldCheck className="h-4 w-4 text-success flex-shrink-0" />
-                                )}
-                              </div>
-                              <div className="flex items-center gap-1 text-xs text-muted-foreground mt-0.5">
-                                <MapPin className="h-3 w-3" />
-                                <span className="truncate">
-                                  {product.profiles.city}, {product.profiles.province}
-                                </span>
-                              </div>
-                            </div>
-                          </div>
-                        )}
-
-                        {/* Action Button */}
-                        <Button
-                          onClick={() => handleInterestClick(product)}
-                          disabled={product.stock === 0}
-                          className="w-full gap-2 bg-whatsapp hover:bg-whatsapp/90 text-whatsapp-foreground"
-                        >
-                          <MessageCircle className="h-4 w-4" />
-                          Tenho Interesse
-                        </Button>
-                      </div>
-                    </div>
-                  );
-                })}
+              <div className="grid grid-cols-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-1.5 sm:gap-6">
+                {products.map((product) => (
+                  <ProductCard
+                    key={product.id}
+                    id={product.id}
+                    name={product.name}
+                    price={product.price}
+                    image={product.images?.[0] || "https://via.placeholder.com/400x400?text=Sem+Imagem"}
+                    stock={product.stock}
+                    storeName={product.profiles?.store_name || "Loja"}
+                    storeLocation={`${product.profiles?.city || ""}, ${product.profiles?.province || ""}`}
+                    storeWhatsApp={product.profiles?.whatsapp || ""}
+                    isVerified={product.profiles?.is_verified || false}
+                    isHighlighted={product.is_highlighted || false}
+                    sellerId={product.profiles?.user_id}
+                    promotionalPrice={product.promotional_price}
+                    promotionExpiresAt={product.promotion_expires_at}
+                  />
+                ))}
               </div>
             )}
           </div>
