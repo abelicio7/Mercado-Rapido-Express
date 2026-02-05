@@ -43,6 +43,8 @@ interface Product {
     whatsapp: string;
     is_verified: boolean;
     user_id: string;
+    plan_expires_at: string | null;
+    trial_ends_at: string | null;
   } | null;
 }
 
@@ -114,7 +116,9 @@ const Products = () => {
             city,
             whatsapp,
             is_verified,
-            user_id
+            user_id,
+            plan_expires_at,
+            trial_ends_at
           )
         `)
         .eq("is_active", true)
@@ -135,6 +139,16 @@ const Products = () => {
 
       // Filter by province and city in JS (since it's in the joined table)
       let filteredData = data || [];
+
+      // Filter out products from sellers with expired plan/trial
+      const now = new Date();
+      filteredData = filteredData.filter(p => {
+        if (!p.profiles) return false;
+        const profile = p.profiles as any;
+        const planExpires = profile.plan_expires_at ? new Date(profile.plan_expires_at) : null;
+        const trialEnds = profile.trial_ends_at ? new Date(profile.trial_ends_at) : null;
+        return (planExpires && planExpires > now) || (trialEnds && trialEnds > now);
+      });
 
       if (selectedProvince) {
         filteredData = filteredData.filter(

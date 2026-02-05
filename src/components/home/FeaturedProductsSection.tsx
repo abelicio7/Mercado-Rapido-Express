@@ -146,7 +146,9 @@ const FeaturedProductsSection = () => {
             city,
             whatsapp,
             is_verified,
-            user_id
+            user_id,
+            plan_expires_at,
+            trial_ends_at
           )
         `)
         .eq("is_highlighted", true)
@@ -158,7 +160,13 @@ const FeaturedProductsSection = () => {
         console.error("Error fetching highlighted products:", highlightedError);
       }
 
-      const realHighlights = highlightedProducts || [];
+      // Filter out products from sellers with expired plan/trial
+      const now = new Date();
+      const realHighlights = (highlightedProducts || []).filter((p: any) => {
+        const planExpires = p.profiles?.plan_expires_at ? new Date(p.profiles.plan_expires_at) : null;
+        const trialEnds = p.profiles?.trial_ends_at ? new Date(p.profiles.trial_ends_at) : null;
+        return (planExpires && planExpires > now) || (trialEnds && trialEnds > now);
+      });
 
       // If we have real highlighted products, use them
       if (realHighlights.length > 0) {
@@ -196,7 +204,9 @@ const FeaturedProductsSection = () => {
                 city,
                 whatsapp,
                 is_verified,
-                user_id
+              user_id,
+              plan_expires_at,
+              trial_ends_at
               )
             `)
             .eq("is_active", true)
@@ -205,7 +215,13 @@ const FeaturedProductsSection = () => {
             .limit(8 - transformedProducts.length);
 
           if (moreProducts) {
-            const moreTransformed = moreProducts.map((product: any) => ({
+            // Filter by active seller
+            const activeProducts = moreProducts.filter((p: any) => {
+              const planExpires = p.profiles?.plan_expires_at ? new Date(p.profiles.plan_expires_at) : null;
+              const trialEnds = p.profiles?.trial_ends_at ? new Date(p.profiles.trial_ends_at) : null;
+              return (planExpires && planExpires > now) || (trialEnds && trialEnds > now);
+            });
+            const moreTransformed = activeProducts.map((product: any) => ({
               id: product.id,
               name: product.name,
               price: product.price,
@@ -240,16 +256,25 @@ const FeaturedProductsSection = () => {
               city,
               whatsapp,
               is_verified,
-              user_id
+              user_id,
+              plan_expires_at,
+              trial_ends_at
             )
           `)
           .eq("is_active", true)
           .order("created_at", { ascending: false })
           .limit(8);
 
-        if (anyProducts && anyProducts.length > 0) {
+        // Filter by active seller
+        const activeAnyProducts = (anyProducts || []).filter((p: any) => {
+          const planExpires = p.profiles?.plan_expires_at ? new Date(p.profiles.plan_expires_at) : null;
+          const trialEnds = p.profiles?.trial_ends_at ? new Date(p.profiles.trial_ends_at) : null;
+          return (planExpires && planExpires > now) || (trialEnds && trialEnds > now);
+        });
+
+        if (activeAnyProducts.length > 0) {
           // We have real products but no highlights, show real products
-          const transformedProducts: FeaturedProduct[] = anyProducts.map((product: any) => ({
+          const transformedProducts: FeaturedProduct[] = activeAnyProducts.map((product: any) => ({
             id: product.id,
             name: product.name,
             price: product.price,
