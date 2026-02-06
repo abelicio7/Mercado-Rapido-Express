@@ -63,6 +63,8 @@ interface RelatedProduct {
   profiles: {
     store_name: string;
     is_verified: boolean;
+    plan_expires_at: string | null;
+    trial_ends_at: string | null;
   } | null;
 }
 
@@ -131,6 +133,23 @@ const ProductDetails = () => {
     sellerId: string
   ) => {
     try {
+      const now = new Date().toISOString();
+      
+      const profileSelect = `
+        store_name,
+        is_verified,
+        plan_expires_at,
+        trial_ends_at
+      `;
+
+      const filterActive = (products: RelatedProduct[]) =>
+        products.filter((p) => {
+          if (!p.profiles) return false;
+          const planOk = p.profiles.plan_expires_at && p.profiles.plan_expires_at > now;
+          const trialOk = p.profiles.trial_ends_at && p.profiles.trial_ends_at > now;
+          return planOk || trialOk;
+        });
+
       // First try to get products from same category
       let query = supabase
         .from("products")
@@ -143,14 +162,11 @@ const ProductDetails = () => {
           is_highlighted,
           promotional_price,
           promotion_expires_at,
-          profiles!products_seller_id_fkey (
-            store_name,
-            is_verified
-          )
+          profiles!products_seller_id_fkey (${profileSelect})
         `)
         .eq("is_active", true)
         .neq("id", currentProductId)
-        .limit(4);
+        .limit(8);
 
       if (categoryId) {
         query = query.eq("category_id", categoryId);
@@ -160,9 +176,11 @@ const ProductDetails = () => {
 
       if (categoryError) throw categoryError;
 
+      const filteredCategory = filterActive(categoryProducts || []);
+
       // If we have enough from category, use those
-      if (categoryProducts && categoryProducts.length >= 4) {
-        setRelatedProducts(categoryProducts);
+      if (filteredCategory.length >= 4) {
+        setRelatedProducts(filteredCategory.slice(0, 4));
         return;
       }
 
@@ -178,23 +196,22 @@ const ProductDetails = () => {
           is_highlighted,
           promotional_price,
           promotion_expires_at,
-          profiles!products_seller_id_fkey (
-            store_name,
-            is_verified
-          )
+          profiles!products_seller_id_fkey (${profileSelect})
         `)
         .eq("is_active", true)
         .eq("seller_id", sellerId)
         .neq("id", currentProductId)
-        .limit(4);
+        .limit(8);
 
       if (storeError) throw storeError;
 
+      const filteredStore = filterActive(storeProducts || []);
+
       // Combine and deduplicate
-      const combined = [...(categoryProducts || [])];
+      const combined = [...filteredCategory];
       const existingIds = new Set(combined.map((p) => p.id));
 
-      for (const product of storeProducts || []) {
+      for (const product of filteredStore) {
         if (!existingIds.has(product.id) && combined.length < 4) {
           combined.push(product);
           existingIds.add(product.id);
