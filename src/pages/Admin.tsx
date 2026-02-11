@@ -32,6 +32,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Shield,
   ShieldCheck,
@@ -43,6 +44,10 @@ import {
   ExternalLink,
   CheckCircle,
   XCircle,
+  DollarSign,
+  TrendingUp,
+  Calendar,
+  CreditCard,
 } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { Link } from "react-router-dom";
@@ -60,6 +65,17 @@ interface SellerProfile {
   plan_type: string | null;
   plan_expires_at: string | null;
   trial_ends_at: string | null;
+  created_at: string;
+}
+
+interface SubscriptionPayment {
+  id: string;
+  seller_id: string;
+  plan_type: string;
+  billing_period: string;
+  amount: number;
+  payment_method: string;
+  payment_reference: string | null;
   created_at: string;
 }
 
@@ -94,6 +110,10 @@ const Admin = () => {
     action: "verify" | "unverify";
   }>({ open: false, store: null, action: "verify" });
 
+  // Revenue state
+  const [payments, setPayments] = useState<SubscriptionPayment[]>([]);
+  const [paymentsLoading, setPaymentsLoading] = useState(false);
+
   useEffect(() => {
     if (!authLoading && !user) {
       navigate("/auth");
@@ -109,6 +129,7 @@ const Admin = () => {
   useEffect(() => {
     if (isAdmin) {
       fetchStores();
+      fetchPayments();
     }
   }, [isAdmin]);
 
@@ -160,6 +181,23 @@ const Admin = () => {
       });
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchPayments = async () => {
+    setPaymentsLoading(true);
+    try {
+      const { data, error } = await supabase
+        .from("subscription_payments")
+        .select("*")
+        .order("created_at", { ascending: false });
+
+      if (error) throw error;
+      setPayments((data as SubscriptionPayment[]) || []);
+    } catch (error) {
+      console.error("Error fetching payments:", error);
+    } finally {
+      setPaymentsLoading(false);
     }
   };
 
@@ -248,6 +286,37 @@ const Admin = () => {
     return matchesSearch && matchesProvince && matchesVerification;
   });
 
+  // Revenue calculations
+  const now = new Date();
+  const currentMonth = now.getMonth();
+  const currentYear = now.getFullYear();
+
+  const currentMonthPayments = payments.filter((p) => {
+    const d = new Date(p.created_at);
+    return d.getMonth() === currentMonth && d.getFullYear() === currentYear;
+  });
+
+  const totalRevenueAllTime = payments.reduce((sum, p) => sum + Number(p.amount), 0);
+  const monthlyRevenue = currentMonthPayments.reduce((sum, p) => sum + Number(p.amount), 0);
+  const activeSubscriptions = stores.filter((s) => {
+    const exp = s.plan_expires_at ? new Date(s.plan_expires_at) : null;
+    return exp && exp > now;
+  }).length;
+
+  // Estimated monthly recurring revenue based on active subscriptions
+  const estimatedMRR = stores.reduce((sum, s) => {
+    const exp = s.plan_expires_at ? new Date(s.plan_expires_at) : null;
+    if (!exp || exp <= now) return sum;
+    if (s.plan_type === "basico") return sum + 497;
+    if (s.plan_type === "pro") return sum + 997;
+    return sum;
+  }, 0);
+
+  const getSellerName = (sellerId: string) => {
+    const store = stores.find((s) => s.user_id === sellerId);
+    return store?.store_name || "Desconhecido";
+  };
+
   if (authLoading || checkingAdmin) {
     return (
       <div className="min-h-screen bg-background">
@@ -280,203 +349,347 @@ const Admin = () => {
             </h1>
           </div>
           <p className="text-muted-foreground">
-            Gerencie a verificação das lojas de vendedores.
+            Gerencie lojas e acompanhe receitas da plataforma.
           </p>
         </div>
 
-        {/* Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-          <div className="bg-card rounded-xl p-4 shadow-card">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-primary/10 rounded-lg">
-                <Store className="h-5 w-5 text-primary" />
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Total de Lojas</p>
-                <p className="text-2xl font-bold">{stores.length}</p>
-              </div>
-            </div>
-          </div>
-          <div className="bg-card rounded-xl p-4 shadow-card">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-success/10 rounded-lg">
-                <ShieldCheck className="h-5 w-5 text-success" />
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Verificadas</p>
-                <p className="text-2xl font-bold">
-                  {stores.filter((s) => s.is_verified).length}
-                </p>
-              </div>
-            </div>
-          </div>
-          <div className="bg-card rounded-xl p-4 shadow-card">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-muted rounded-lg">
-                <ShieldX className="h-5 w-5 text-muted-foreground" />
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Não Verificadas</p>
-                <p className="text-2xl font-bold">
-                  {stores.filter((s) => !s.is_verified).length}
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
+        <Tabs defaultValue="stores" className="space-y-6">
+          <TabsList className="grid w-full grid-cols-2 max-w-md">
+            <TabsTrigger value="stores" className="gap-2">
+              <Store className="h-4 w-4" />
+              Lojas
+            </TabsTrigger>
+            <TabsTrigger value="revenue" className="gap-2">
+              <DollarSign className="h-4 w-4" />
+              Receitas
+            </TabsTrigger>
+          </TabsList>
 
-        {/* Filters */}
-        <div className="bg-card rounded-xl p-4 shadow-card mb-6">
-          <div className="flex flex-col md:flex-row gap-4">
-            <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="Pesquisar por nome ou cidade..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10"
-              />
+          {/* STORES TAB */}
+          <TabsContent value="stores" className="space-y-6">
+            {/* Stats */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="bg-card rounded-xl p-4 shadow-card">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-primary/10 rounded-lg">
+                    <Store className="h-5 w-5 text-primary" />
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground">Total de Lojas</p>
+                    <p className="text-2xl font-bold">{stores.length}</p>
+                  </div>
+                </div>
+              </div>
+              <div className="bg-card rounded-xl p-4 shadow-card">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-success/10 rounded-lg">
+                    <ShieldCheck className="h-5 w-5 text-success" />
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground">Verificadas</p>
+                    <p className="text-2xl font-bold">
+                      {stores.filter((s) => s.is_verified).length}
+                    </p>
+                  </div>
+                </div>
+              </div>
+              <div className="bg-card rounded-xl p-4 shadow-card">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-muted rounded-lg">
+                    <ShieldX className="h-5 w-5 text-muted-foreground" />
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground">Não Verificadas</p>
+                    <p className="text-2xl font-bold">
+                      {stores.filter((s) => !s.is_verified).length}
+                    </p>
+                  </div>
+                </div>
+              </div>
             </div>
-            <Select value={selectedProvince} onValueChange={setSelectedProvince}>
-              <SelectTrigger className="w-full md:w-48">
-                <SelectValue placeholder="Província" />
-              </SelectTrigger>
-              <SelectContent>
-                {PROVINCES.map((province) => (
-                  <SelectItem key={province} value={province}>
-                    {province}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <Select
-              value={verificationFilter}
-              onValueChange={setVerificationFilter}
-            >
-              <SelectTrigger className="w-full md:w-48">
-                <SelectValue placeholder="Status" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Todas</SelectItem>
-                <SelectItem value="verified">Verificadas</SelectItem>
-                <SelectItem value="unverified">Não verificadas</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-        </div>
 
-        {/* Table */}
-        <div className="bg-card rounded-xl shadow-card overflow-hidden">
-          {loading ? (
-            <div className="flex items-center justify-center py-12">
-              <Loader2 className="h-8 w-8 animate-spin text-primary" />
+            {/* Filters */}
+            <div className="bg-card rounded-xl p-4 shadow-card">
+              <div className="flex flex-col md:flex-row gap-4">
+                <div className="relative flex-1">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    placeholder="Pesquisar por nome ou cidade..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="pl-10"
+                  />
+                </div>
+                <Select value={selectedProvince} onValueChange={setSelectedProvince}>
+                  <SelectTrigger className="w-full md:w-48">
+                    <SelectValue placeholder="Província" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {PROVINCES.map((province) => (
+                      <SelectItem key={province} value={province}>
+                        {province}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <Select
+                  value={verificationFilter}
+                  onValueChange={setVerificationFilter}
+                >
+                  <SelectTrigger className="w-full md:w-48">
+                    <SelectValue placeholder="Status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Todas</SelectItem>
+                    <SelectItem value="verified">Verificadas</SelectItem>
+                    <SelectItem value="unverified">Não verificadas</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
-          ) : filteredStores.length === 0 ? (
-            <div className="text-center py-12">
-              <Store className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-              <p className="text-muted-foreground">Nenhuma loja encontrada.</p>
-            </div>
-          ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Loja</TableHead>
-                  <TableHead>Localização</TableHead>
-                  <TableHead>Status do Plano</TableHead>
-                  <TableHead>Verificação</TableHead>
-                  <TableHead className="text-right">Ações</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredStores.map((store) => {
-                  const status = getStoreStatus(store);
-                  return (
-                    <TableRow key={store.user_id}>
-                      <TableCell>
-                        <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center overflow-hidden">
-                            {store.avatar_url ? (
-                              <img
-                                src={store.avatar_url}
-                                alt={store.store_name || ""}
-                                className="w-full h-full object-cover"
-                              />
-                            ) : (
-                              <Store className="h-5 w-5 text-primary" />
-                            )}
-                          </div>
-                          <div>
-                            <p className="font-medium">
-                              {store.store_name || "Sem nome"}
-                            </p>
-                            <p className="text-xs text-muted-foreground">
-                              {store.phone || store.whatsapp || "Sem contacto"}
-                            </p>
-                          </div>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex items-center gap-1 text-sm text-muted-foreground">
-                          <MapPin className="h-3 w-3" />
-                          <span>
-                            {store.city || store.province || "Não informado"}
-                          </span>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <Badge variant={status.variant}>{status.label}</Badge>
-                      </TableCell>
-                      <TableCell>
-                        {store.is_verified ? (
-                          <Badge className="bg-success text-success-foreground gap-1">
-                            <CheckCircle className="h-3 w-3" />
-                            Verificada
-                          </Badge>
-                        ) : (
-                          <Badge variant="outline" className="gap-1">
-                            <XCircle className="h-3 w-3" />
-                            Não verificada
-                          </Badge>
-                        )}
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <div className="flex items-center justify-end gap-2">
-                          <Button variant="ghost" size="sm" asChild>
-                            <Link to={`/loja/${store.user_id}`} target="_blank">
-                              <ExternalLink className="h-4 w-4" />
-                            </Link>
-                          </Button>
-                          {store.is_verified ? (
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() =>
-                                openConfirmDialog(store, "unverify")
-                              }
-                              className="gap-1"
-                            >
-                              <ShieldX className="h-4 w-4" />
-                              Remover
-                            </Button>
-                          ) : (
-                            <Button
-                              size="sm"
-                              onClick={() => openConfirmDialog(store, "verify")}
-                              className="gap-1"
-                            >
-                              <ShieldCheck className="h-4 w-4" />
-                              Verificar
-                            </Button>
-                          )}
-                        </div>
-                      </TableCell>
+
+            {/* Table */}
+            <div className="bg-card rounded-xl shadow-card overflow-hidden">
+              {loading ? (
+                <div className="flex items-center justify-center py-12">
+                  <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                </div>
+              ) : filteredStores.length === 0 ? (
+                <div className="text-center py-12">
+                  <Store className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                  <p className="text-muted-foreground">Nenhuma loja encontrada.</p>
+                </div>
+              ) : (
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Loja</TableHead>
+                      <TableHead>Localização</TableHead>
+                      <TableHead>Status do Plano</TableHead>
+                      <TableHead>Verificação</TableHead>
+                      <TableHead className="text-right">Ações</TableHead>
                     </TableRow>
-                  );
-                })}
-              </TableBody>
-            </Table>
-          )}
-        </div>
+                  </TableHeader>
+                  <TableBody>
+                    {filteredStores.map((store) => {
+                      const status = getStoreStatus(store);
+                      return (
+                        <TableRow key={store.user_id}>
+                          <TableCell>
+                            <div className="flex items-center gap-3">
+                              <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center overflow-hidden">
+                                {store.avatar_url ? (
+                                  <img
+                                    src={store.avatar_url}
+                                    alt={store.store_name || ""}
+                                    className="w-full h-full object-cover"
+                                  />
+                                ) : (
+                                  <Store className="h-5 w-5 text-primary" />
+                                )}
+                              </div>
+                              <div>
+                                <p className="font-medium">
+                                  {store.store_name || "Sem nome"}
+                                </p>
+                                <p className="text-xs text-muted-foreground">
+                                  {store.phone || store.whatsapp || "Sem contacto"}
+                                </p>
+                              </div>
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex items-center gap-1 text-sm text-muted-foreground">
+                              <MapPin className="h-3 w-3" />
+                              <span>
+                                {store.city || store.province || "Não informado"}
+                              </span>
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <Badge variant={status.variant}>{status.label}</Badge>
+                          </TableCell>
+                          <TableCell>
+                            {store.is_verified ? (
+                              <Badge className="bg-success text-success-foreground gap-1">
+                                <CheckCircle className="h-3 w-3" />
+                                Verificada
+                              </Badge>
+                            ) : (
+                              <Badge variant="outline" className="gap-1">
+                                <XCircle className="h-3 w-3" />
+                                Não verificada
+                              </Badge>
+                            )}
+                          </TableCell>
+                          <TableCell className="text-right">
+                            <div className="flex items-center justify-end gap-2">
+                              <Button variant="ghost" size="sm" asChild>
+                                <Link to={`/loja/${store.user_id}`} target="_blank">
+                                  <ExternalLink className="h-4 w-4" />
+                                </Link>
+                              </Button>
+                              {store.is_verified ? (
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() =>
+                                    openConfirmDialog(store, "unverify")
+                                  }
+                                  className="gap-1"
+                                >
+                                  <ShieldX className="h-4 w-4" />
+                                  Remover
+                                </Button>
+                              ) : (
+                                <Button
+                                  size="sm"
+                                  onClick={() => openConfirmDialog(store, "verify")}
+                                  className="gap-1"
+                                >
+                                  <ShieldCheck className="h-4 w-4" />
+                                  Verificar
+                                </Button>
+                              )}
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })}
+                  </TableBody>
+                </Table>
+              )}
+            </div>
+          </TabsContent>
+
+          {/* REVENUE TAB */}
+          <TabsContent value="revenue" className="space-y-6">
+            {/* Revenue Stats */}
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+              <div className="bg-card rounded-xl p-4 shadow-card">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-success/10 rounded-lg">
+                    <DollarSign className="h-5 w-5 text-success" />
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground">Receita do Mês</p>
+                    <p className="text-2xl font-bold text-success">
+                      {monthlyRevenue.toLocaleString("pt-MZ")} MT
+                    </p>
+                  </div>
+                </div>
+              </div>
+              <div className="bg-card rounded-xl p-4 shadow-card">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-primary/10 rounded-lg">
+                    <TrendingUp className="h-5 w-5 text-primary" />
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground">MRR Estimado</p>
+                    <p className="text-2xl font-bold text-primary">
+                      {estimatedMRR.toLocaleString("pt-MZ")} MT
+                    </p>
+                  </div>
+                </div>
+              </div>
+              <div className="bg-card rounded-xl p-4 shadow-card">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-gold/10 rounded-lg">
+                    <CreditCard className="h-5 w-5 text-gold" />
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground">Receita Total</p>
+                    <p className="text-2xl font-bold">
+                      {totalRevenueAllTime.toLocaleString("pt-MZ")} MT
+                    </p>
+                  </div>
+                </div>
+              </div>
+              <div className="bg-card rounded-xl p-4 shadow-card">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-primary/10 rounded-lg">
+                    <Calendar className="h-5 w-5 text-primary" />
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground">Assinaturas Ativas</p>
+                    <p className="text-2xl font-bold">{activeSubscriptions}</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Payments History */}
+            <div className="bg-card rounded-xl shadow-card overflow-hidden">
+              <div className="p-4 border-b">
+                <h2 className="font-semibold text-lg">Histórico de Pagamentos</h2>
+                <p className="text-sm text-muted-foreground">
+                  Todos os pagamentos de assinaturas confirmados
+                </p>
+              </div>
+              {paymentsLoading ? (
+                <div className="flex items-center justify-center py-12">
+                  <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                </div>
+              ) : payments.length === 0 ? (
+                <div className="text-center py-12">
+                  <DollarSign className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                  <p className="text-muted-foreground">Nenhum pagamento registrado ainda.</p>
+                </div>
+              ) : (
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Data</TableHead>
+                      <TableHead>Loja</TableHead>
+                      <TableHead>Plano</TableHead>
+                      <TableHead>Período</TableHead>
+                      <TableHead>Método</TableHead>
+                      <TableHead>Referência</TableHead>
+                      <TableHead className="text-right">Valor</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {payments.map((payment) => (
+                      <TableRow key={payment.id}>
+                        <TableCell className="text-sm">
+                          {new Date(payment.created_at).toLocaleDateString("pt-MZ", {
+                            day: "2-digit",
+                            month: "2-digit",
+                            year: "numeric",
+                            hour: "2-digit",
+                            minute: "2-digit",
+                          })}
+                        </TableCell>
+                        <TableCell className="font-medium">
+                          {getSellerName(payment.seller_id)}
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant={payment.plan_type === "pro" ? "default" : "secondary"}>
+                            {payment.plan_type === "pro" ? "Pro" : "Básico"}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="text-sm">
+                          {payment.billing_period === "mensal" ? "Mensal" : "Anual"}
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant="outline" className="uppercase text-xs">
+                            {payment.payment_method}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="text-sm text-muted-foreground font-mono">
+                          {payment.payment_reference || "-"}
+                        </TableCell>
+                        <TableCell className="text-right font-semibold">
+                          {Number(payment.amount).toLocaleString("pt-MZ")} MT
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              )}
+            </div>
+          </TabsContent>
+        </Tabs>
       </main>
 
       <Footer />

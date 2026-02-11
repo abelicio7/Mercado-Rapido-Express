@@ -170,6 +170,22 @@ serve(async (req: Request) => {
         );
       }
 
+      // Record payment for revenue tracking
+      const { error: paymentRecordError } = await supabase
+        .from("subscription_payments")
+        .insert({
+          seller_id: userId,
+          plan_type: planType,
+          billing_period: billingPeriod,
+          amount: amount,
+          payment_method: paymentMethod,
+          payment_reference: reference,
+        });
+
+      if (paymentRecordError) {
+        console.error("Failed to record payment (non-critical):", paymentRecordError);
+      }
+
       console.log("Subscription updated successfully!");
 
       return new Response(

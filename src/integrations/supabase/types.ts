@@ -253,6 +253,39 @@ export type Database = {
         }
         Relationships: []
       }
+      subscription_payments: {
+        Row: {
+          amount: number
+          billing_period: string
+          created_at: string
+          id: string
+          payment_method: string
+          payment_reference: string | null
+          plan_type: string
+          seller_id: string
+        }
+        Insert: {
+          amount: number
+          billing_period: string
+          created_at?: string
+          id?: string
+          payment_method: string
+          payment_reference?: string | null
+          plan_type: string
+          seller_id: string
+        }
+        Update: {
+          amount?: number
+          billing_period?: string
+          created_at?: string
+          id?: string
+          payment_method?: string
+          payment_reference?: string | null
+          plan_type?: string
+          seller_id?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           created_at: string
