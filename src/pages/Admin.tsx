@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -51,6 +51,15 @@ import {
 } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { Link } from "react-router-dom";
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+} from "recharts";
 
 interface SellerProfile {
   user_id: string;
@@ -93,6 +102,53 @@ const PROVINCES = [
   "Cabo Delgado",
   "Niassa",
 ];
+
+const MONTH_NAMES = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"];
+
+const MonthlyRevenueChart = ({ payments }: { payments: SubscriptionPayment[] }) => {
+  const chartData = useMemo(() => {
+    const now = new Date();
+    const months: { name: string; receita: number }[] = [];
+
+    for (let i = 11; i >= 0; i--) {
+      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      const month = d.getMonth();
+      const year = d.getFullYear();
+      const total = payments
+        .filter((p) => {
+          const pd = new Date(p.created_at);
+          return pd.getMonth() === month && pd.getFullYear() === year;
+        })
+        .reduce((sum, p) => sum + Number(p.amount), 0);
+
+      months.push({
+        name: `${MONTH_NAMES[month]}/${String(year).slice(2)}`,
+        receita: total,
+      });
+    }
+    return months;
+  }, [payments]);
+
+  return (
+    <ResponsiveContainer width="100%" height={300}>
+      <BarChart data={chartData}>
+        <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+        <XAxis dataKey="name" className="text-xs" tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 12 }} />
+        <YAxis tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 12 }} tickFormatter={(v) => `${v.toLocaleString("pt-MZ")}`} />
+        <Tooltip
+          contentStyle={{
+            backgroundColor: "hsl(var(--card))",
+            border: "1px solid hsl(var(--border))",
+            borderRadius: "8px",
+            color: "hsl(var(--foreground))",
+          }}
+          formatter={(value: number) => [`${value.toLocaleString("pt-MZ")} MT`, "Receita"]}
+        />
+        <Bar dataKey="receita" fill="hsl(var(--primary))" radius={[6, 6, 0, 0]} />
+      </BarChart>
+    </ResponsiveContainer>
+  );
+};
 
 const Admin = () => {
   const navigate = useNavigate();
@@ -615,6 +671,19 @@ const Admin = () => {
                     <p className="text-2xl font-bold">{activeSubscriptions}</p>
                   </div>
                 </div>
+              </div>
+            </div>
+
+            {/* Monthly Revenue Chart */}
+            <div className="bg-card rounded-xl shadow-card overflow-hidden">
+              <div className="p-4 border-b">
+                <h2 className="font-semibold text-lg">Evolução Mensal de Receitas</h2>
+                <p className="text-sm text-muted-foreground">
+                  Receita dos últimos 12 meses
+                </p>
+              </div>
+              <div className="p-4">
+                <MonthlyRevenueChart payments={payments} />
               </div>
             </div>
 
